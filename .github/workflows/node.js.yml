@@ -21,5 +21,4 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run lint
-      - run: npx pkg-pr-new publish
-      - run: cd playground && npx pkg-pr-new publish
+      - run: npx pkg-pr-new publish ./ ./playground
