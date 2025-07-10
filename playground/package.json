@@ -101,6 +101,7 @@
   },
   "peerDependencies": {
     "@convex-dev/agent": "^0.1.5",
+    "convex-helpers": "^0.1.99",
     "convex": "^1.23.0",
     "zod": "^3.23.8"
   },
@@ -110,6 +111,7 @@
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "convex-helpers": "0.1.99",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",

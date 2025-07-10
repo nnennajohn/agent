@@ -2143,27 +2143,6 @@ export declare const components: {
         "internal",
         { workflowId: string },
         {
-          inProgress: Array<{
-            _creationTime: number;
-            _id: string;
-            step: {
-              args: any;
-              argsSize: number;
-              completedAt?: number;
-              functionType: "query" | "mutation" | "action";
-              handle: string;
-              inProgress: boolean;
-              name: string;
-              runResult?:
-                | { kind: "success"; returnValue: any }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-              startedAt: number;
-              workId?: string;
-            };
-            stepNumber: number;
-            workflowId: string;
-          }>;
           journalEntries: Array<{
             _creationTime: number;
             _id: string;
@@ -2283,7 +2262,6 @@ export declare const components: {
         "internal",
         {
           generationNumber: number;
-          now: number;
           runResult:
             | { kind: "success"; returnValue: any }
             | { error: string; kind: "failed" }
@@ -2298,7 +2276,7 @@ export declare const components: {
         {
           maxParallelism?: number;
           onComplete?: { context?: any; fnHandle: string };
-          validateAsync?: boolean;
+          startAsync?: boolean;
           workflowArgs: any;
           workflowHandle: string;
           workflowName: string;
@@ -2507,6 +2485,7 @@ export declare const components: {
         "internal",
         {
           entryId: string;
+          order: "desc" | "asc";
           paginationOpts: {
             cursor: string | null;
             endCursor?: string | null;
@@ -2560,13 +2539,14 @@ export declare const components: {
         {
           created: boolean;
           entryId: string;
-          replacedVersion: {
+          replacedEntry: {
             contentHash?: string;
             entryId: string;
             filterValues: Array<{ name: string; value: any }>;
             importance: number;
             key?: string;
             metadata?: Record<string, any>;
+            replacedAt?: number;
             status: "pending" | "ready" | "replaced";
             title?: string;
           } | null;
@@ -2615,6 +2595,7 @@ export declare const components: {
           importance: number;
           key?: string;
           metadata?: Record<string, any>;
+          replacedAt?: number;
           status: "pending" | "ready" | "replaced";
           title?: string;
         } | null
@@ -2630,6 +2611,7 @@ export declare const components: {
           importance: number;
           key?: string;
           metadata?: Record<string, any>;
+          replacedAt?: number;
           status: "pending" | "ready" | "replaced";
           title?: string;
         } | null
@@ -2638,7 +2620,7 @@ export declare const components: {
         "query",
         "internal",
         {
-          namespaceId: string;
+          namespaceId?: string;
           order?: "desc" | "asc";
           paginationOpts: {
             cursor: string | null;
@@ -2660,6 +2642,7 @@ export declare const components: {
             importance: number;
             key?: string;
             metadata?: Record<string, any>;
+            replacedAt?: number;
             status: "pending" | "ready" | "replaced";
             title?: string;
           }>;
@@ -2672,13 +2655,14 @@ export declare const components: {
         "internal",
         { entryId: string },
         {
-          replacedVersion: {
+          replacedEntry: {
             contentHash?: string;
             entryId: string;
             filterValues: Array<{ name: string; value: any }>;
             importance: number;
             key?: string;
             metadata?: Record<string, any>;
+            replacedAt?: number;
             status: "pending" | "ready" | "replaced";
             title?: string;
           } | null;
@@ -2766,7 +2750,7 @@ export declare const components: {
         "internal",
         { namespaceId: string },
         {
-          replacedVersion: null | {
+          replacedNamespace: null | {
             createdAt: number;
             dimension: number;
             filterNames: Array<string>;
@@ -2800,6 +2784,7 @@ export declare const components: {
             importance: number;
             key?: string;
             metadata?: Record<string, any>;
+            replacedAt?: number;
             status: "pending" | "ready" | "replaced";
             title?: string;
           }>;
