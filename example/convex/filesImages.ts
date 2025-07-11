@@ -1,1 +1,1 @@
-export * from "../../examples/files-images/convex/filesImages";
+export * from "@example/files-images/convex/filesImages.js";

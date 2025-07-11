@@ -141,7 +141,14 @@ function Story({ threadId, reset }: { threadId: string; reset: () => void }) {
 
 function Message({ message }: { message: UIMessage }) {
   const isUser = message.role === "user";
-  const [visibleText] = useSmoothText(message.content);
+  const [visibleText] = useSmoothText(message.content, {
+    // This tells the hook that it's ok to start streaming immediately.
+    // If this was always passed as true, messages that are already done would
+    // also stream in.
+    // IF this was always passed as false (default), then the streaming message
+    // wouldn't start streaming until the second chunk was received.
+    startStreaming: message.status === "streaming",
+  });
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div

@@ -1,5 +1,6 @@
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { Toaster } from "./components/ui/toaster";
+import { usePaginatedQuery } from "convex-helpers/react";
 import { api } from "../convex/_generated/api";
 import {
   optimisticallySendMessage,

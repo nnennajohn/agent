@@ -19,6 +19,7 @@ import type {
   ToolSet,
 } from "ai";
 import type {
+  Auth,
   Expand,
   FunctionReference,
   GenericActionCtx,
@@ -495,6 +496,7 @@ export type RunActionCtx = {
   runAction: GenericActionCtx<GenericDataModel>["runAction"];
 };
 export type ActionCtx = RunActionCtx & {
+  auth: Auth;
   storage: StorageActionWriter;
 };
 export type QueryCtx = RunQueryCtx & {

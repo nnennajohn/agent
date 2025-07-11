@@ -39,6 +39,7 @@ import {
   type VectorTableId,
   vVectorId,
 } from "./vector/tables.js";
+import { changeRefcount } from "./files.js";
 
 /** @deprecated Use *.threads.listMessagesByThreadId instead. */
 export const listThreadsByUserId = _listThreadsByUserId;
@@ -61,18 +62,74 @@ export async function deleteMessage(
   if (messageDoc.embeddingId) {
     await ctx.db.delete(messageDoc.embeddingId);
   }
-  for (const fileId of messageDoc.fileIds ?? []) {
-    if (!fileId) continue;
-    const file = await ctx.db.get(fileId);
-    if (file) {
-      await ctx.db.patch(fileId, { refcount: file.refcount - 1 });
-    }
+  if (messageDoc.fileIds) {
+    await changeRefcount(ctx, messageDoc.fileIds, []);
   }
 }
+
+export const deleteByIds = mutation({
+  args: {
+    messageIds: v.array(v.id("messages")),
+  },
+  returns: v.array(v.id("messages")),
+  handler: async (ctx, args) => {
+    const deletedMessageIds = await Promise.all(
+      args.messageIds.map(async (id) => {
+        const message = await ctx.db.get(id);
+        if (message) {
+          await deleteMessage(ctx, message);
+          return id;
+        }
+        return null;
+      })
+    );
+    return deletedMessageIds.filter((id) => id !== null);
+  },
+});
 
 export const messageStatuses = vMessageDoc.fields.status.members.map(
   (m) => m.value
 );
+
+export const deleteByOrder = mutation({
+  args: {
+    threadId: v.id("threads"),
+    startOrder: v.number(),
+    startStepOrder: v.optional(v.number()),
+    endOrder: v.number(),
+    endStepOrder: v.optional(v.number()),
+  },
+  returns: v.object({
+    isDone: v.boolean(),
+    lastOrder: v.optional(v.number()),
+    lastStepOrder: v.optional(v.number()),
+  }),
+  handler: async (ctx, args) => {
+    const messages = await orderedMessagesStream(
+      ctx,
+      args.threadId,
+      "asc",
+      args.startOrder
+    )
+      .narrow({
+        lowerBound: args.startStepOrder
+          ? [args.startOrder, args.startStepOrder]
+          : [args.startOrder],
+        lowerBoundInclusive: true,
+        upperBound: args.endStepOrder
+          ? [args.endOrder, args.endStepOrder]
+          : [args.endOrder],
+        upperBoundInclusive: false,
+      })
+      .take(64);
+    await Promise.all(messages.map((m) => deleteMessage(ctx, m)));
+    return {
+      isDone: messages.length < 64,
+      lastOrder: messages[messages.length - 1]?.order,
+      lastStepOrder: messages[messages.length - 1]?.stepOrder,
+    };
+  },
+});
 
 const addMessagesArgs = {
   userId: v.optional(v.string()),
@@ -182,11 +239,8 @@ async function addMessagesHandler(
     //     id: messageId,
     //   });
     // }
-    for (const fileId of message.fileIds ?? []) {
-      if (!fileId) continue;
-      await ctx.db.patch(fileId, {
-        refcount: (await ctx.db.get(fileId))!.refcount + 1,
-      });
+    if (message.fileIds) {
+      await changeRefcount(ctx, [], message.fileIds);
     }
     // TODO: delete the associated stream data for the order/stepOrder
     toReturn.push((await ctx.db.get(messageId))!);
@@ -272,6 +326,7 @@ export const updateMessage = mutation({
     messageId: v.id("messages"),
     patch: v.object({
       message: v.optional(vMessageDoc.fields.message),
+      fileIds: v.optional(v.array(v.id("files"))),
       status: v.optional(vMessageStatus),
       error: v.optional(v.string()),
     }),
@@ -280,6 +335,10 @@ export const updateMessage = mutation({
   handler: async (ctx, args) => {
     const message = await ctx.db.get(args.messageId);
     assert(message, `Message ${args.messageId} not found`);
+
+    if (args.patch.fileIds) {
+      await changeRefcount(ctx, message.fileIds ?? [], args.patch.fileIds);
+    }
 
     const patch: Partial<Doc<"messages">> = {
       ...args.patch,

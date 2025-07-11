@@ -11,7 +11,7 @@
     "email": "support@convex.dev",
     "url": "https://github.com/get-convex/agent/issues"
   },
-  "version": "0.0.15-alpha.0",
+  "version": "0.0.15-alpha.1",
   "license": "Apache-2.0",
   "type": "module",
   "keywords": [
@@ -77,7 +77,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "convex-helpers": "^0.1.87",
+    "convex-helpers": "^0.1.99",
     "date-fns": "^3.2.0",
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.3.0",
@@ -101,6 +101,7 @@
   },
   "peerDependencies": {
     "@convex-dev/agent": "^0.1.5",
+    "convex-helpers": "^0.1.99",
     "convex": "^1.23.0",
     "zod": "^3.23.8"
   },
@@ -110,6 +111,7 @@
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "convex-helpers": "0.1.99",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",

@@ -27,7 +27,12 @@ export const schema = defineSchema({
     defaultSystemPrompt: v.optional(v.string()),
     parentThreadIds: v.optional(v.array(v.id("threads"))),
     order: /*DEPRECATED*/ v.optional(v.number()),
-  }).index("userId", ["userId"]),
+  })
+    .index("userId", ["userId"])
+    .searchIndex("title", {
+      searchField: "title",
+      filterFields: ["userId"],
+    }),
   messages: defineTable({
     id: v.optional(v.string()), // external id, e.g. from Vercel AI SDK
     userId: v.optional(v.string()), // useful for searching across threads

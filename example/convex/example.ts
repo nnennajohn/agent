@@ -292,7 +292,7 @@ export const generateObject = action({
     for await (const chunk of result.partialObjectStream) {
       console.log(chunk);
     }
-    return { threadId, object: result.object };
+    return { threadId, object: await result.object };
   },
 });
 

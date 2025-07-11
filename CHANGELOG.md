@@ -1,11 +1,47 @@
 # Changelog
 
-## 0.1.10 alpha
+## 0.1.15 alpha
 
 - You can request that `syncStreams` return aborted streamed messages,
   if you want to show those in your UI.
 - They will have `msg.streaming === false` if they were aborted.
-- Fix: stream deletion is idempotent and cleanup is canceled if it's already deleted.
+
+## 0.1.14
+
+- Expose delete functions for messages & threads on the Agent class
+- Expose updating messages on the Agent class
+- Expose the types for ThreadQuery, StreamArgs, and SyncStreamsReturnValue
+- Fix thread title text search
+- Fix loading state of pagination (peer bump)
+- Fix user messages going from pending-> failed when using
+  prompt with generateText repeatedly in a thread.
+
+## 0.1.13
+
+- Allow updating a thread's userId
+- Auth is available in the `createTool` ctx.
+- Add text search on thread titles.
+- Add RAG example & docs
+
+## 0.1.12
+
+- Pass the final model & provider when storing messages, in case
+  it was overriden at the thread/callsite level.
+
+## 0.1.11
+
+- Supports passing both a promptMessageId and messages, so you
+  can pass context messages while also generating the propt message
+  ahead of time in a mutation.
+- Now includes an example of RAG using the Memory component.
+
+## 0.1.10
+
+- Fix object serialization
+- Sources will be populated to non-tool results
+- Deleting files will return the files actually deleted
+- Agents without names will warn if used in the playground
+- More graceful deletion of streams
 
 ## 0.1.9
 

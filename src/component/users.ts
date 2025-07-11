@@ -26,7 +26,7 @@ export const listUsersWithThreads = query({
   handler: async (ctx, args) => {
     const results = await stream(ctx.db, schema)
       .query("threads")
-      .withIndex("userId", (q) => q)
+      .withIndex("userId", (q) => q.gt("userId", ""))
       .filterWith(async (q) => !!q.userId)
       .distinct(["userId"])
       .paginate(args.paginationOpts);

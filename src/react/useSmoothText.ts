@@ -17,19 +17,26 @@ export function useSmoothText(
   text: string,
   {
     charsPerSec = 256,
+    startStreaming = false,
   }: {
     /**
      * The number of characters to display per second.
      */
     charsPerSec?: number;
+    /**
+     * Whether to initially start streaming.
+     * If this later turns to false, it'll continue streaming.
+     * This will start streaming the first value it sees.
+     */
+    startStreaming?: boolean;
   } = {}
 ): [string, { cursor: number; isStreaming: boolean }] {
-  const [visibleText, setVisibleText] = useState(text);
+  const [visibleText, setVisibleText] = useState(startStreaming ? "" : text);
   const smoothState = useRef({
-    tick: Date.now() + (text.length * 1000) / charsPerSec,
-    cursor: text.length,
+    tick: Date.now() + (visibleText.length * 1000) / charsPerSec,
+    cursor: visibleText.length,
     start: Date.now(),
-    initialLength: text.length,
+    initialLength: visibleText.length,
     charsPerMs: charsPerSec / 1000,
   });
 

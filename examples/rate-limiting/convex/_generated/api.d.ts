@@ -87,7 +87,7 @@ export declare const components: {
         "mutation",
         "internal",
         { fileIds: Array<string>; force?: boolean },
-        null
+        Array<string>
       >;
       get: FunctionReference<
         "query",
@@ -493,6 +493,24 @@ export declare const components: {
         "internal",
         { messageId: string },
         null
+      >;
+      deleteByIds: FunctionReference<
+        "mutation",
+        "internal",
+        { messageIds: Array<string> },
+        Array<string>
+      >;
+      deleteByOrder: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          endOrder: number;
+          endStepOrder?: number;
+          startOrder: number;
+          startStepOrder?: number;
+          threadId: string;
+        },
+        { isDone: boolean; lastOrder?: number; lastStepOrder?: number }
       >;
       getMessagesByIds: FunctionReference<
         "query",
@@ -1316,6 +1334,7 @@ export declare const components: {
           messageId: string;
           patch: {
             error?: string;
+            fileIds?: Array<string>;
             message?:
               | {
                   content:
@@ -1890,6 +1909,19 @@ export declare const components: {
           splitCursor?: string | null;
         }
       >;
+      searchThreadTitles: FunctionReference<
+        "query",
+        "internal",
+        { limit: number; query: string; userId?: string | null },
+        Array<{
+          _creationTime: number;
+          _id: string;
+          status: "active" | "archived";
+          summary?: string;
+          title?: string;
+          userId?: string;
+        }>
+      >;
       updateThread: FunctionReference<
         "mutation",
         "internal",
@@ -1898,6 +1930,7 @@ export declare const components: {
             status?: "active" | "archived";
             summary?: string;
             title?: string;
+            userId?: string;
           };
           threadId: string;
         },

@@ -1,5 +1,5 @@
 {
-  "name": "uses-component",
+  "name": "agent-example",
   "private": true,
   "type": "module",
   "version": "0.0.0",
@@ -16,6 +16,7 @@
     "@ai-sdk/openai": "^1.3.9",
     "@convex-dev/agent": "file:..",
     "@convex-dev/agent-playground": "file:../playground",
+    "@convex-dev/rag": "^0.3.0",
     "@convex-dev/rate-limiter": "^0.2.10",
     "@convex-dev/workflow": "^0.2.1",
     "@hookform/resolvers": "^5.0.1",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@langchain/textsplitters": "^0.1.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.0",

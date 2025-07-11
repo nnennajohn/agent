@@ -9,7 +9,9 @@ AI Agent framework built on Convex.
 - Automatic storage of chat history, per-user or per-thread, that can span multiple agents.
 - Playground UI for testing, debugging, and development. See [playground/README.md](playground/README.md) for more.
 - RAG for chat context, via hybrid text & vector search, with configuration options.
-  Use the API to query the history yourself and do it your way.
+  You can also pair it with the [RAG component](https://convex.dev/components/rag)
+  to search for other context either before the prompt or via tool calls.
+  See [examples/convex/rag](./example/convex/rag/README.md).
 - Opt-in search for messages from other threads (for the same specified user).
 - Support for generating / streaming objects and storing them in messages (as JSON).
 - Tool calls via the AI SDK, along with Convex-specific tool wrappers.
@@ -25,7 +27,7 @@ AI Agent framework built on Convex.
 
 [Read the associated Stack post here](https://stack.convex.dev/ai-agents).
 
-[![Powerful AI Apps Made Easy with the Agent Component](https://img.youtube.com/vi/tUKMPUlOCHY/0.jpg)](https://www.youtube.com/watch?v=tUKMPUlOCHY)
+[![Powerful AI Apps Made Easy with the Agent Component](https://thumbs.video-to-markdown.com/b323ac24.jpg)](https://youtu.be/tUKMPUlOCHY)
 
 Play with the [examples](./examples/) by cloning this repo and running:
 ```sh
@@ -170,6 +172,16 @@ export const createThread = mutation({
     return { threadId };
   },
 });
+```
+
+Note: if you're in an environment where you don't have access to the Agent, then
+you can create the thread more manually:
+
+```ts
+const { _id: threadId } = await ctx.runMutation(
+  components.agent.threads.createThread,
+  { userId, title, summary }
+);
 ```
 
 ### Continuing a thread

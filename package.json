@@ -7,7 +7,7 @@
     "email": "support@convex.dev",
     "url": "https://github.com/get-convex/agent/issues"
   },
-  "version": "0.1.10-alpha.1",
+  "version": "0.1.14",
   "license": "Apache-2.0",
   "keywords": [
     "convex",
@@ -17,24 +17,22 @@
   ],
   "type": "module",
   "scripts": {
-    "example": "npm run setup && cd example && npm run dev",
+    "example": "cd example && npm run dev",
     "dev": "run-p 'example' 'build:watch'",
-    "setup": "node setup.cjs",
-    "build": "npm run build:esm && npm run build:cjs",
-    "build:watch": "cd src && npx chokidar '../tsconfig.json' '*.ts' 'react/**/*.ts' 'component/**/*.ts' 'client/**/*.ts' -c 'npm run build' --initial",
-    "build:esm": "tsc --project ./esm.json && npm run copy:dts:esm && echo '{\\n  \"type\": \"module\"\\n}' > dist/esm/package.json",
-    "build:cjs": "tsc --project ./commonjs.json && npm run copy:dts:cjs && echo '{\\n  \"type\": \"commonjs\"\\n}' > dist/commonjs/package.json",
-    "copy:dts:esm": "cpy 'src/**/*.d.ts' 'dist/esm/' --parents",
-    "copy:dts:cjs": "cpy 'src/**/*.d.ts' 'dist/commonjs/' --parents",
+    "setup": "node setup.cjs && cd example && npx convex dev --once",
+    "dashboard": "cd example && npx convex dashboard",
+    "build:watch": "cd src && npx chokidar '../tsconfig*' '**/*.ts' -c 'npm run build' --initial",
+    "build": "tsc --project ./tsconfig.build.json && npm run copy:dts && echo '{\\n  \"type\": \"module\"\\n}' > dist/package.json",
+    "copy:dts": "rsync -a --include='*/' --include='*.d.ts' --exclude='*' src/ dist/ || cpy 'src/**/*.d.ts' 'dist/' --parents",
     "typecheck": "tsc --noEmit",
-    "prepack": "node node10stubs.mjs",
-    "postpack": "node node10stubs.mjs --cleanup",
-    "alpha": "rm -rf dist && npm run build && npm run test && npm version prerelease --preid alpha && npm publish --tag alpha && git push --tags",
-    "release": "rm -rf dist && npm run build && npm run test && npm version patch && npm publish && git push --tags",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
+    "alpha": "npm run clean && npm run build && run-p test lint typecheck && npm version prerelease --preid alpha && npm publish --tag alpha && git push --tags",
+    "release": "npm run clean && npm run build && run-p test lint typecheck && npm version patch && npm publish && git push --tags && git push",
     "test": "vitest run --typecheck --config ./src/vitest.config.ts",
     "test:watch": "vitest --typecheck --config ./src/vitest.config.ts",
     "test:debug": "vitest --inspect-brk --no-file-parallelism --config ./src/vitest.config.ts",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
+    "lint": "eslint src",
     "version": "pbcopy <<<$npm_package_version; vim CHANGELOG.md && git add CHANGELOG.md"
   },
   "files": [
@@ -44,53 +42,30 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": {
-        "@convex-dev/component-source": "./src/client/index.ts",
-        "types": "./dist/esm/client/index.d.ts",
-        "default": "./dist/esm/client/index.js"
-      },
-      "require": {
-        "@convex-dev/component-source": "./src/client/index.ts",
-        "types": "./dist/commonjs/client/index.d.ts",
-        "default": "./dist/commonjs/client/index.js"
-      }
+      "@convex-dev/component-source": "./src/client/index.ts",
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
     },
     "./validators": {
-      "import": {
-        "@convex-dev/component-source": "./src/validators.ts",
-        "types": "./dist/esm/validators.d.ts",
-        "default": "./dist/esm/validators.js"
-      },
-      "require": {
-        "@convex-dev/component-source": "./src/validators.ts",
-        "types": "./dist/commonjs/validators.d.ts",
-        "default": "./dist/commonjs/validators.js"
-      }
+      "@convex-dev/component-source": "./src/validators.ts",
+      "types": "./dist/validators.d.ts",
+      "default": "./dist/validators.js"
     },
     "./react": {
-      "import": {
-        "@convex-dev/component-source": "./src/react/index.ts",
-        "types": "./dist/esm/react/index.d.ts",
-        "default": "./dist/esm/react/index.js"
-      },
-      "require": {
-        "@convex-dev/component-source": "./src/react/index.ts",
-        "types": "./dist/commonjs/react/index.d.ts",
-        "default": "./dist/commonjs/react/index.js"
-      }
+      "@convex-dev/component-source": "./src/react/index.ts",
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     },
     "./convex.config": {
-      "import": {
-        "@convex-dev/component-source": "./src/component/convex.config.ts",
-        "types": "./dist/esm/component/convex.config.d.ts",
-        "default": "./dist/esm/component/convex.config.js"
-      }
+      "@convex-dev/component-source": "./src/component/convex.config.ts",
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
     }
   },
   "peerDependencies": {
     "ai": "^4.3.16",
     "convex": "^1.23.0",
-    "convex-helpers": "^0.1.94",
+    "convex-helpers": "^0.1.99",
     "react": "^18.3.1 || ^19.0.0"
   },
   "peerDependenciesMeta": {
@@ -99,13 +74,14 @@
     }
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.4",
     "@edge-runtime/vm": "^5.0.0",
     "@eslint/js": "^9.9.1",
     "@types/node": "^18.19.86",
     "@types/react": "^19.1.1",
     "chokidar-cli": "^3.0.0",
     "convex": "^1.24.8",
-    "convex-helpers": "^0.1.94",
+    "convex-helpers": "0.1.99",
     "convex-test": "^0.0.37",
     "cpy-cli": "^5.0.0",
     "eslint": "^9.24.0",
@@ -114,13 +90,14 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.15.0",
     "npm-run-all2": "^8.0.4",
+    "pkg-pr-new": "^0.0.53",
     "prettier": "3.2.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.1",
     "vitest": "^3.1.1",
     "zod": "^3.25.56"
   },
-  "main": "./dist/commonjs/client/index.js",
-  "types": "./dist/commonjs/client/index.d.ts",
-  "module": "./dist/esm/client/index.js"
+  "main": "./dist/client/index.js",
+  "types": "./dist/client/index.d.ts",
+  "module": "./dist/client/index.js"
 }

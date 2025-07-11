@@ -1,7 +1,11 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import ragTables from "./rag/tables.js";
 
 export default defineSchema({
+  ...ragTables,
+
+  /** TODO: delete these */
   ideas: defineTable({
     title: v.string(),
     summary: v.string(),

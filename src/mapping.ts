@@ -85,6 +85,7 @@ export async function serializeNewMessagesInStep<TOOLS extends ToolSet>(
     usage: step.usage,
     warnings: step.warnings,
     finishReason: step.finishReason,
+    sources: step.stepType === "tool-result" ? undefined : step.sources,
   };
   const toolFields = {
     sources: step.sources,
@@ -113,17 +114,19 @@ export async function serializeNewMessagesInStep<TOOLS extends ToolSet>(
   return messages;
 }
 
-export function serializeObjectResult(
+export async function serializeObjectResult(
+  ctx: ActionCtx,
+  component: AgentComponent,
   result: GenerateObjectResult<unknown>,
   metadata: { model: string; provider: string }
-): { messages: MessageWithMetadata[] } {
+): Promise<{ messages: MessageWithMetadata[] }> {
   const text = JSON.stringify(result.object);
 
-  const message = {
+  const { message, fileIds } = await serializeMessage(ctx, component, {
     role: "assistant" as const,
     content: text,
     id: result.response.id,
-  };
+  });
   return {
     messages: [
       {
@@ -136,6 +139,7 @@ export function serializeObjectResult(
         text,
         usage: result.usage,
         warnings: result.warnings,
+        fileIds,
       },
     ],
   };
@@ -330,9 +334,13 @@ function encodeBase64(data: ArrayBuffer): string {
 export function promptOrMessagesToCoreMessages(args: {
   prompt?: string;
   messages?: CoreMessage[] | AIMessageWithoutId[];
+  promptMessageId?: string;
 }): CoreMessage[] {
   const messages: CoreMessage[] = [];
-  assert(args.prompt || args.messages, "messages or prompt is required");
+  assert(
+    args.prompt || args.messages || args.promptMessageId,
+    "messages or prompt or promptMessageId is required"
+  );
   if (args.messages) {
     if (
       args.messages.some(
@@ -350,9 +358,10 @@ export function promptOrMessagesToCoreMessages(args: {
       messages.push(...coreMessageSchema.array().parse(args.messages));
     }
   }
-  if (args.prompt) {
+  // If they specify both a promptMessageId and a prompt, we will replace the
+  // promptMessageId message with the prompt later.
+  if (args.prompt && !args.promptMessageId) {
     messages.push({ role: "user", content: args.prompt });
   }
-  assert(messages.length > 0, "Messages must contain at least one message");
   return messages;
 }

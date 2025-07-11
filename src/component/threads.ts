@@ -71,12 +71,17 @@ export const createThread = mutation({
   returns: vThreadDoc,
 });
 
+export const threadFieldsSupportingPatch = [
+  "title" as const,
+  "summary" as const,
+  "status" as const,
+  "userId" as const,
+];
+
 export const updateThread = mutation({
   args: {
     threadId: v.id("threads"),
-    patch: v.object(
-      partial(pick(vThread.fields, ["title", "summary", "status"]))
-    ),
+    patch: v.object(partial(pick(vThread.fields, threadFieldsSupportingPatch))),
   },
   handler: async (ctx, args) => {
     const thread = await ctx.db.get(args.threadId);
@@ -85,6 +90,26 @@ export const updateThread = mutation({
     return publicThread((await ctx.db.get(args.threadId))!);
   },
   returns: vThreadDoc,
+});
+
+export const searchThreadTitles = query({
+  args: {
+    query: v.string(),
+    userId: v.optional(v.union(v.string(), v.null())),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const threads = await ctx.db
+      .query("threads")
+      .withSearchIndex("title", (q) =>
+        args.userId
+          ? q.search("title", args.query).eq("userId", args.userId ?? undefined)
+          : q.search("title", args.query)
+      )
+      .take(args.limit);
+    return threads.map(publicThread);
+  },
+  returns: v.array(vThreadDoc),
 });
 
 // When we expose this, we need to also hide all the messages and steps

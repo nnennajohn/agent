@@ -76,6 +76,7 @@ import type {
   Thread,
   UsageHandler,
 } from "./types.js";
+import type { threadFieldsSupportingPatch } from "../component/threads.js";
 
 export { storeFile, getFile } from "./files.js";
 export { serializeDataOrUrl } from "../mapping.js";
@@ -101,6 +102,7 @@ export type {
   MessageDoc,
   ProviderMetadata,
   StorageOptions,
+  StreamArgs,
   SyncStreamsReturnValue,
   Thread,
   ThreadDoc,
@@ -108,7 +110,7 @@ export type {
   UsageHandler,
 };
 
-export class Agent<AgentTools extends ToolSet> {
+export class Agent<AgentTools extends ToolSet = ToolSet> {
   constructor(
     public component: AgentComponent,
     public options: {
@@ -351,6 +353,30 @@ export class Agent<AgentTools extends ToolSet> {
   }
 
   /**
+   * Search for threads by title, paginated.
+   * @param ctx The context passed from the query/mutation/action.
+   * @returns The threads matching the search, paginated.
+   */
+  async searchThreadTitles(
+    ctx: RunQueryCtx,
+    {
+      userId,
+      query,
+      limit,
+    }: {
+      userId?: string | undefined;
+      query: string;
+      limit?: number;
+    }
+  ): Promise<ThreadDoc[]> {
+    return ctx.runQuery(this.component.threads.searchThreadTitles, {
+      userId,
+      query,
+      limit: limit ?? 10,
+    });
+  }
+
+  /**
    * This behaves like {@link generateText} from the "ai" package except that
    * it add context based on the userId and threadId and saves the input and
    * resulting messages to the thread, if specified.
@@ -417,6 +443,8 @@ export class Agent<AgentTools extends ToolSet> {
               userId,
               threadId,
               promptMessageId: messageId,
+              model: aiArgs.model.modelId,
+              provider: aiArgs.model.provider,
               step,
             });
           }
@@ -574,11 +602,12 @@ export class Agent<AgentTools extends ToolSet> {
       },
       onStepFinish: async (step) => {
         // console.log("onStepFinish", step);
-        // TODO: compare delta to the output. internally drop the deltas when committing
         if (threadId && messageId) {
           const saved = await this.saveStep(ctx, {
             userId,
             threadId,
+            model: aiArgs.model.modelId,
+            provider: aiArgs.model.provider,
             promptMessageId: messageId,
             step,
           });
@@ -624,7 +653,7 @@ export class Agent<AgentTools extends ToolSet> {
    * to a thread (and optionally userId).
    */
   async generateObject<T>(
-    ctx: RunActionCtx,
+    ctx: ActionCtx,
     {
       userId: argsUserId,
       threadId,
@@ -662,6 +691,8 @@ export class Agent<AgentTools extends ToolSet> {
           promptMessageId: messageId,
           result,
           userId,
+          model: aiArgs.model.modelId,
+          provider: aiArgs.model.provider,
         });
       }
       result.messageId = messageId;
@@ -705,7 +736,7 @@ export class Agent<AgentTools extends ToolSet> {
    * to a thread (and optionally userId).
    */
   async streamObject<T>(
-    ctx: RunActionCtx,
+    ctx: ActionCtx,
     {
       userId: argsUserId,
       threadId,
@@ -760,6 +791,8 @@ export class Agent<AgentTools extends ToolSet> {
               logprobs: undefined,
               toJsonResponse: stream.toTextStreamResponse,
             },
+            model: aiArgs.model.modelId,
+            provider: aiArgs.model.provider,
           });
         }
         if (trackUsage && result.usage) {
@@ -1075,9 +1108,7 @@ export class Agent<AgentTools extends ToolSet> {
       const targetMessage = contextMessages.find(
         (m) => m._id === args.upToAndIncludingMessageId
       )?.message;
-      const messagesToSearch = targetMessage
-        ? [targetMessage, ...args.messages]
-        : args.messages;
+      const messagesToSearch = targetMessage ? [targetMessage] : args.messages;
       if (!("runAction" in ctx)) {
         throw new Error("searchUserMessages only works in an action");
       }
@@ -1145,7 +1176,12 @@ export class Agent<AgentTools extends ToolSet> {
    */
   async updateThreadMetadata(
     ctx: RunMutationCtx,
-    args: { threadId: string; patch: Partial<WithoutSystemFields<ThreadDoc>> }
+    args: {
+      threadId: string;
+      patch: Partial<
+        Pick<ThreadDoc, (typeof threadFieldsSupportingPatch)[number]>
+      >;
+    }
   ): Promise<ThreadDoc> {
     const thread = await ctx.runMutation(
       this.component.threads.updateThread,
@@ -1351,19 +1387,26 @@ export class Agent<AgentTools extends ToolSet> {
    * @param args The arguments to the saveObject function.
    */
   async saveObject(
-    ctx: RunActionCtx,
+    ctx: ActionCtx,
     args: {
       userId: string | undefined;
       threadId: string;
       promptMessageId: string;
+      model: string | undefined;
+      provider: string | undefined;
       result: GenerateObjectResult<unknown>;
       metadata?: Omit<MessageWithMetadata, "message">;
     }
   ): Promise<void> {
-    const { messages } = serializeObjectResult(args.result, {
-      model: this.options.chat.modelId,
-      provider: this.options.chat.provider,
-    });
+    const { messages } = await serializeObjectResult(
+      ctx,
+      this.component,
+      args.result,
+      {
+        model: args.model ?? this.options.chat.modelId,
+        provider: args.provider ?? this.options.chat.provider,
+      }
+    );
     const embeddings = await this.generateEmbeddings(
       ctx,
       { userId: args.userId, threadId: args.threadId },
@@ -1411,6 +1454,183 @@ export class Agent<AgentTools extends ToolSet> {
     }
   }
 
+  /**
+   * Update a message by its id.
+   * @param ctx The ctx argument to your mutation or action.
+   * @param args The message fields to update.
+   */
+  async updateMessage(
+    ctx: RunMutationCtx,
+    args: {
+      /** The id of the message to update. */
+      messageId: string;
+      patch: {
+        /** The message to replace the existing message. */
+        message: CoreMessage & { id?: string };
+        /** The status to set on the message. */
+        status: "success" | "error";
+        /** The error message to set on the message. */
+        error?: string;
+        /**
+         * These will override the fileIds in the message.
+         * To remove all existing files, pass an empty array.
+         * If passing in a new message, pass in the fileIds you explicitly want to keep
+         * from the previous message, as the new files generated from the new message
+         * will be added to the list.
+         * If you pass undefined, it will not change the fileIds unless new
+         * files are generated from the message. In that case, the new fileIds
+         * will replace the old fileIds.
+         */
+        fileIds?: string[];
+      };
+    }
+  ): Promise<void> {
+    const { message, fileIds } = await serializeMessage(
+      ctx,
+      this.component,
+      args.patch.message
+    );
+    await ctx.runMutation(this.component.messages.updateMessage, {
+      messageId: args.messageId,
+      patch: {
+        message,
+        fileIds: args.patch.fileIds
+          ? [...args.patch.fileIds, ...(fileIds ?? [])]
+          : fileIds,
+        status: args.patch.status === "success" ? "success" : "failed",
+        error: args.patch.error,
+      },
+    });
+  }
+
+  /**
+   * Delete multiple messages by their ids, including their embeddings
+   * and reduce the refcount of any files they reference.
+   * @param ctx The ctx argument to your mutation or action.
+   * @param args The ids of the messages to delete.
+   */
+  async deleteMessages(
+    ctx: RunMutationCtx,
+    args: {
+      messageIds: string[];
+    }
+  ): Promise<void> {
+    await ctx.runMutation(this.component.messages.deleteByIds, args);
+  }
+
+  /**
+   * Delete a single message by its id, including its embedding
+   * and reduce the refcount of any files it references.
+   * @param ctx The ctx argument to your mutation or action.
+   * @param args The id of the message to delete.
+   */
+  async deleteMessage(
+    ctx: RunMutationCtx,
+    args: {
+      messageId: string;
+    }
+  ): Promise<void> {
+    await ctx.runMutation(this.component.messages.deleteByIds, {
+      messageIds: [args.messageId],
+    });
+  }
+
+  /**
+   * Delete a range of messages by their order and step order.
+   * Each "order" is a set of associated messages in response to the message
+   * at stepOrder 0.
+   * The (startOrder, startStepOrder) is inclusive
+   * and the (endOrder, endStepOrder) is exclusive.
+   * To delete all messages at "order" 1, you can pass:
+   * `{ startOrder: 1, endOrder: 2 }`
+   * To delete a message at step (order=1, stepOrder=1), you can pass:
+   * `{ startOrder: 1, startStepOrder: 1, endOrder: 1, endStepOrder: 2 }`
+   * To delete all messages between (1, 1) up to and including (3, 5), you can pass:
+   * `{ startOrder: 1, startStepOrder: 1, endOrder: 3, endStepOrder: 6 }`
+   *
+   * If it cannot do it in one transaction, it returns information you can use
+   * to resume the deletion.
+   * e.g.
+   * ```ts
+   * let isDone = false;
+   * let lastOrder = args.startOrder;
+   * let lastStepOrder = args.startStepOrder ?? 0;
+   * while (!isDone) {
+   *   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   *   ({ isDone, lastOrder, lastStepOrder } = await agent.deleteMessageRange(
+   *     ctx,
+   *     {
+   *       threadId: args.threadId,
+   *       startOrder: lastOrder,
+   *       startStepOrder: lastStepOrder,
+   *       endOrder: args.endOrder,
+   *       endStepOrder: args.endStepOrder,
+   *     }
+   *   ));
+   * }
+   * ```
+   * @param ctx The ctx argument to your mutation or action.
+   * @param args The range of messages to delete.
+   */
+  async deleteMessageRange(
+    ctx: RunMutationCtx,
+    args: {
+      threadId: string;
+      startOrder: number;
+      startStepOrder?: number;
+      endOrder: number;
+      endStepOrder?: number;
+    }
+  ): Promise<void> {
+    await ctx.runMutation(this.component.messages.deleteByOrder, {
+      threadId: args.threadId,
+      startOrder: args.startOrder,
+      startStepOrder: args.startStepOrder,
+      endOrder: args.endOrder,
+      endStepOrder: args.endStepOrder,
+    });
+  }
+
+  /**
+   * Delete a thread and all its messages and streams asynchronously (in batches)
+   * This uses a mutation to that processes one page and recursively queues the
+   * next page for deletion.
+   * @param ctx The ctx argument to your mutation or action.
+   * @param args The id of the thread to delete and optionally the page size to use for the delete.
+   */
+  async deleteThreadAsync(
+    ctx: RunMutationCtx,
+    args: {
+      threadId: string;
+      pageSize?: number;
+    }
+  ): Promise<void> {
+    await ctx.runMutation(this.component.threads.deleteAllForThreadIdAsync, {
+      threadId: args.threadId,
+      limit: args.pageSize,
+    });
+  }
+
+  /**
+   * Delete a thread and all its messages and streams synchronously.
+   * This uses an action to iterate through all pages. If the action fails
+   * partway, it will not automatically restart.
+   * @param ctx The ctx argument to your action.
+   * @param args The id of the thread to delete and optionally the page size to use for the delete.
+   */
+  async deleteThreadSync(
+    ctx: RunActionCtx,
+    args: {
+      threadId: string;
+      pageSize?: number;
+    }
+  ): Promise<void> {
+    await ctx.runAction(this.component.threads.deleteAllForThreadIdSync, {
+      threadId: args.threadId,
+      limit: args.pageSize,
+    });
+  }
+
   async _saveMessagesAndFetchContext<
     T extends {
       id?: string;
@@ -1442,19 +1662,13 @@ export class Agent<AgentTools extends ToolSet> {
   }> {
     contextOptions ||= this.options.contextOptions;
     storageOptions ||= this.options.storageOptions;
-    // If only a messageId is provided, this will be empty.
-    const messages = args.promptMessageId
-      ? []
-      : promptOrMessagesToCoreMessages(args);
+    // If only a promptMessageId is provided, this will be empty.
+    const messages = promptOrMessagesToCoreMessages(args);
     const userId =
       argsUserId ??
       (threadId &&
         (await ctx.runQuery(this.component.threads.getThread, { threadId }))
           ?.userId);
-    assert(
-      !args.promptMessageId || !(args.prompt || args.messages),
-      "you can't specify a prompt or message if you specify a promptMessageId"
-    );
     // If only a messageId is provided, this will add that message to the end.
     const contextMessages = await this.fetchContextMessages(ctx, {
       userId,
@@ -1463,29 +1677,28 @@ export class Agent<AgentTools extends ToolSet> {
       messages,
       contextOptions,
     });
-    // Lazily generate embeddings for the prompt message, if it doesn't have
-    // embeddings yet. This can happen if the message was saved in a mutation
-    // where the LLM is not available.
-    if (
-      args.promptMessageId &&
-      !contextMessages.at(-1)?.embeddingId &&
-      this.options.textEmbedding
-    ) {
-      await this.generateAndSaveEmbeddings(ctx, {
-        messageIds: [args.promptMessageId],
-      });
+    // If it was a promptMessageId, pop it off context messages
+    // and add to the end of messages.
+    // TODO: slice it from the prompt message, to append all of them
+    const promptMessage =
+      !!args.promptMessageId &&
+      contextMessages.at(-1)?._id === args.promptMessageId
+        ? contextMessages.pop()
+        : undefined;
+    if (promptMessage && args.prompt) {
+      // If they specify both a promptMessageId and a prompt, we prefer
+      // the prompt to stand in for the promptMessageId message.
+      promptMessage.message = { role: "user", content: args.prompt };
     }
-    let messageId = args.promptMessageId;
-    let order = args.promptMessageId
-      ? contextMessages.at(-1)?.order
-      : undefined;
-    let stepOrder = args.promptMessageId
-      ? contextMessages.at(-1)?.stepOrder
-      : undefined;
+    let messageId = promptMessage?._id;
+    let order = promptMessage?.order;
+    let stepOrder = promptMessage?.stepOrder;
     if (
       threadId &&
       messages.length &&
       storageOptions?.saveMessages !== "none" &&
+      // If it was a promptMessageId, we don't want to save it again.
+      (!args.promptMessageId || storageOptions?.saveMessages === "all") &&
       storageOptions?.saveAnyInputMessages !== false
     ) {
       const saveAll = storageOptions?.saveMessages === "all";
@@ -1494,13 +1707,26 @@ export class Agent<AgentTools extends ToolSet> {
         threadId,
         userId,
         messages: coreMessages,
-        metadata: coreMessages.length === 1 ? [{ id: args.id }] : undefined,
-        pending: true,
+        metadata: coreMessages.map((_, i) =>
+          i === coreMessages.length - 1 ? { id: args.id } : {}
+        ),
         failPendingSteps: true,
       });
       messageId = saved.lastMessageId;
       order = saved.messages.at(-1)?.order;
       stepOrder = saved.messages.at(-1)?.stepOrder;
+    }
+    if (promptMessage?.message) {
+      // Add the message after saving the messages, so it's not saved again.
+      messages.push(deserializeMessage(promptMessage.message));
+      // Lazily generate embeddings for the prompt message, if it doesn't have
+      // embeddings yet. This can happen if the message was saved in a mutation
+      // where the LLM is not available.
+      if (!promptMessage.embeddingId && this.options.textEmbedding) {
+        await this.generateAndSaveEmbeddings(ctx, {
+          messageIds: [promptMessage._id],
+        });
+      }
     }
 
     let processedMessages = [

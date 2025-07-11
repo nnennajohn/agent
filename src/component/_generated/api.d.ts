@@ -67,7 +67,7 @@ export type Mounts = {
       "mutation",
       "public",
       { fileIds: Array<string>; force?: boolean },
-      null
+      Array<string>
     >;
     get: FunctionReference<
       "query",
@@ -417,6 +417,24 @@ export type Mounts = {
       "public",
       { messageId: string },
       null
+    >;
+    deleteByIds: FunctionReference<
+      "mutation",
+      "public",
+      { messageIds: Array<string> },
+      Array<string>
+    >;
+    deleteByOrder: FunctionReference<
+      "mutation",
+      "public",
+      {
+        endOrder: number;
+        endStepOrder?: number;
+        startOrder: number;
+        startStepOrder?: number;
+        threadId: string;
+      },
+      { isDone: boolean; lastOrder?: number; lastStepOrder?: number }
     >;
     getMessagesByIds: FunctionReference<
       "query",
@@ -1184,6 +1202,7 @@ export type Mounts = {
         messageId: string;
         patch: {
           error?: string;
+          fileIds?: Array<string>;
           message?:
             | {
                 content:
@@ -1734,6 +1753,19 @@ export type Mounts = {
         splitCursor?: string | null;
       }
     >;
+    searchThreadTitles: FunctionReference<
+      "query",
+      "public",
+      { limit: number; query: string; userId?: string | null },
+      Array<{
+        _creationTime: number;
+        _id: string;
+        status: "active" | "archived";
+        summary?: string;
+        title?: string;
+        userId?: string;
+      }>
+    >;
     updateThread: FunctionReference<
       "mutation",
       "public",
@@ -1742,6 +1774,7 @@ export type Mounts = {
           status?: "active" | "archived";
           summary?: string;
           title?: string;
+          userId?: string;
         };
         threadId: string;
       },

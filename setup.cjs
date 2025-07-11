@@ -8,11 +8,11 @@ const { execSync } = require("child_process");
 execSync("npm install", { cwd: __dirname, stdio: "inherit" });
 execSync("npm run build", { cwd: __dirname, stdio: "inherit" });
 execSync("npm install", {
-  cwd: join(__dirname, "./example"),
+  cwd: join(__dirname, "./playground"),
   stdio: "inherit",
 });
 execSync("npm install", {
-  cwd: join(__dirname, "./playground"),
+  cwd: join(__dirname, "./example"),
   stdio: "inherit",
 });
 

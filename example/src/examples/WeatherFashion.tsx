@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useAction, usePaginatedQuery, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react";
 import { api } from "../../convex/_generated/api";
 import ReactMarkdown from "react-markdown";
 import { useStreamingText } from "@convex-dev/agent/react";

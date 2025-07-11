@@ -52,6 +52,17 @@ export function Index() {
               saved and tracked.
             </p>
           </li>
+          <li className="border rounded p-4 hover:shadow transition">
+            <Link
+              to="/rag-basic"
+              className="text-xl font-semibold text-indigo-700 hover:underline"
+            >
+              RAG Chat
+            </Link>
+            <p className="mt-2 text-gray-700">
+              A simple RAG example with a chat interface.
+            </p>
+          </li>
           {/* rate limiting */}
           <li className="border rounded p-4 hover:shadow transition">
             <Link
