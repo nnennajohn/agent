@@ -5,6 +5,7 @@
 - You can request that `syncStreams` return aborted streamed messages,
   if you want to show those in your UI.
 - They will have `msg.streaming === false` if they were aborted.
+- Fix: stream deletion is idempotent and cleanup is canceled if it's already deleted.
 
 ## 0.1.14
 
