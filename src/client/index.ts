@@ -1706,7 +1706,6 @@ export class Agent<AgentTools extends ToolSet> {
         metadata: coreMessages.map((_, i) =>
           i === coreMessages.length - 1 ? { id: args.id } : {}
         ),
-        pending: true,
         failPendingSteps: true,
       });
       messageId = saved.lastMessageId;
