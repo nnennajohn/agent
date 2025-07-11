@@ -602,7 +602,6 @@ export class Agent<AgentTools extends ToolSet> {
       },
       onStepFinish: async (step) => {
         // console.log("onStepFinish", step);
-        // TODO: compare delta to the output. internally drop the deltas when committing
         if (threadId && messageId) {
           const saved = await this.saveStep(ctx, {
             userId,
@@ -1676,6 +1675,7 @@ export class Agent<AgentTools extends ToolSet> {
     });
     // If it was a promptMessageId, pop it off context messages
     // and add to the end of messages.
+    // TODO: slice it from the prompt message, to append all of them
     const promptMessage =
       !!args.promptMessageId &&
       contextMessages.at(-1)?._id === args.promptMessageId
