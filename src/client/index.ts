@@ -598,6 +598,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
             error: (error.error as Error).message,
           });
         }
+        // TODO: update the streamer to error state
         return args.onError?.(error);
       },
       onStepFinish: async (step) => {
@@ -611,7 +612,6 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
             promptMessageId: messageId,
             step,
           });
-          // TODO: figure out pending/not
           await streamer?.finish(saved.messages);
         }
         if (this.options.rawRequestResponseHandler) {
