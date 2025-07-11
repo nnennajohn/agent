@@ -2,6 +2,7 @@
 
 ## 0.1.15 alpha
 
+- Agents can be dynamically created for the playground
 - You can request that `syncStreams` return aborted streamed messages,
   if you want to show those in your UI.
 - They will have `msg.streaming === false` if they were aborted.
@@ -9,6 +10,8 @@
 
 ## 0.1.14
 
+- Show reasoning before text in UI messages
+- List un-named agents in the playground
 - Expose delete functions for messages & threads on the Agent class
 - Expose updating messages on the Agent class
 - Expose the types for ThreadQuery, StreamArgs, and SyncStreamsReturnValue
