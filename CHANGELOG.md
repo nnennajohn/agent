@@ -1,12 +1,14 @@
 # Changelog
 
-## 0.1.14 alpha
+## 0.1.14
 
 - Expose delete functions for messages & threads on the Agent class
 - Expose updating messages on the Agent class
+- Expose the types for ThreadQuery, StreamArgs, and SyncStreamsReturnValue
 - Fix thread title text search
 - Fix loading state of pagination (peer bump)
-- Expose the types for ThreadQuery, StreamArgs, and SyncStreamsReturnValue
+- Fix user messages going from pending-> failed when using
+  prompt with generateText repeatedly in a thread.
 
 ## 0.1.13
 
