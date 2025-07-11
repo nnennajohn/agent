@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { toUIMessages } from "./toUIMessages.js";
 import type { MessageDoc } from "../client/index.js";
+import { assert } from "convex-helpers";
 
 // Helper to create a base message doc
 function baseMessageDoc(overrides: Partial<MessageDoc> = {}): MessageDoc {
@@ -170,6 +171,12 @@ describe("toUIMessages", () => {
     expect(
       uiMessages[0].parts.filter((p) => p.type === "reasoning")
     ).toHaveLength(1);
+    expect(uiMessages[0].parts[0].type).toBe("reasoning");
+    assert(uiMessages[0].parts[0].type === "reasoning");
+    expect(uiMessages[0].parts[0].reasoning).toBe(
+      "I'm thinking...I'm thinking..."
+    );
+
     expect(uiMessages[0].parts.filter((p) => p.type === "text")).toHaveLength(
       1
     );
