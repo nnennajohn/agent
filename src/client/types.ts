@@ -148,7 +148,7 @@ export type UsageHandler = (
 ) => void | Promise<void>;
 
 export type RawRequestResponseHandler = (
-  ctx: RunActionCtx,
+  ctx: ActionCtx,
   args: {
     userId: string | undefined;
     threadId: string | undefined;

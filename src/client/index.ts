@@ -12,7 +12,7 @@ import type {
   ToolSet,
 } from "ai";
 import { generateObject, generateText, streamObject, streamText } from "ai";
-import { assert, type BetterOmit } from "convex-helpers";
+import { assert } from "convex-helpers";
 import {
   internalActionGeneric,
   internalMutationGeneric,
@@ -94,12 +94,20 @@ export {
 } from "../validators.js";
 export type { ToolCtx } from "./createTool.js";
 export { filterOutOrphanedToolMessages } from "./search.js";
-export { createTool, extractText, isTool, listMessages, syncStreams };
+export {
+  createTool,
+  extractText,
+  fetchContextMessages,
+  isTool,
+  listMessages,
+  syncStreams,
+};
 export type {
   AgentComponent,
   ContextOptions,
   MessageDoc,
   ProviderMetadata,
+  RawRequestResponseHandler,
   StorageOptions,
   StreamArgs,
   SyncStreamsReturnValue,
