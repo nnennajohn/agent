@@ -8,21 +8,31 @@
  * @module
  */
 
-import type * as chatBasic from "../chatBasic.js";
-import type * as chatStreaming from "../chatStreaming.js";
-import type * as example from "../example.js";
-import type * as filesImages from "../filesImages.js";
+import type * as agents_fashion from "../agents/fashion.js";
+import type * as agents_simple from "../agents/simple.js";
+import type * as agents_story from "../agents/story.js";
+import type * as agents_weather from "../agents/weather.js";
+import type * as chat_basic from "../chat/basic.js";
+import type * as chat_streaming from "../chat/streaming.js";
+import type * as debugging_rawRequestResponseHandler from "../debugging/rawRequestResponseHandler.js";
+import type * as files_images_autoSave from "../files_images/autoSave.js";
 import type * as http from "../http.js";
-import type * as ideaAgents from "../ideaAgents.js";
-import type * as ideas from "../ideas.js";
+import type * as modelsForDemo from "../modelsForDemo.js";
 import type * as playground from "../playground.js";
-import type * as rag_ragBasic from "../rag/ragBasic.js";
-import type * as rag_ragWithTools from "../rag/ragWithTools.js";
+import type * as rag_ragAsPrompt from "../rag/ragAsPrompt.js";
+import type * as rag_ragAsTools from "../rag/ragAsTools.js";
 import type * as rag_tables from "../rag/tables.js";
 import type * as rag_utils from "../rag/utils.js";
-import type * as rateLimiting from "../rateLimiting.js";
+import type * as threads from "../threads.js";
+import type * as tools_agentAsTool from "../tools/agentAsTool.js";
+import type * as tools_searchMessages from "../tools/searchMessages.js";
+import type * as tools_updateThreadTitle from "../tools/updateThreadTitle.js";
+import type * as tools_weather from "../tools/weather.js";
+import type * as usage_tracking_invoicing from "../usage_tracking/invoicing.js";
+import type * as usage_tracking_tables from "../usage_tracking/tables.js";
+import type * as usage_tracking_usageHandler from "../usage_tracking/usageHandler.js";
 import type * as utils from "../utils.js";
-import type * as weather from "../weather.js";
+import type * as workflows_chaining from "../workflows/chaining.js";
 
 import type {
   ApiFromModules,
@@ -39,21 +49,31 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  chatBasic: typeof chatBasic;
-  chatStreaming: typeof chatStreaming;
-  example: typeof example;
-  filesImages: typeof filesImages;
+  "agents/fashion": typeof agents_fashion;
+  "agents/simple": typeof agents_simple;
+  "agents/story": typeof agents_story;
+  "agents/weather": typeof agents_weather;
+  "chat/basic": typeof chat_basic;
+  "chat/streaming": typeof chat_streaming;
+  "debugging/rawRequestResponseHandler": typeof debugging_rawRequestResponseHandler;
+  "files_images/autoSave": typeof files_images_autoSave;
   http: typeof http;
-  ideaAgents: typeof ideaAgents;
-  ideas: typeof ideas;
+  modelsForDemo: typeof modelsForDemo;
   playground: typeof playground;
-  "rag/ragBasic": typeof rag_ragBasic;
-  "rag/ragWithTools": typeof rag_ragWithTools;
+  "rag/ragAsPrompt": typeof rag_ragAsPrompt;
+  "rag/ragAsTools": typeof rag_ragAsTools;
   "rag/tables": typeof rag_tables;
   "rag/utils": typeof rag_utils;
-  rateLimiting: typeof rateLimiting;
+  threads: typeof threads;
+  "tools/agentAsTool": typeof tools_agentAsTool;
+  "tools/searchMessages": typeof tools_searchMessages;
+  "tools/updateThreadTitle": typeof tools_updateThreadTitle;
+  "tools/weather": typeof tools_weather;
+  "usage_tracking/invoicing": typeof usage_tracking_invoicing;
+  "usage_tracking/tables": typeof usage_tracking_tables;
+  "usage_tracking/usageHandler": typeof usage_tracking_usageHandler;
   utils: typeof utils;
-  weather: typeof weather;
+  "workflows/chaining": typeof workflows_chaining;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
@@ -1058,13 +1078,13 @@ export declare const components: {
         "internal",
         {
           beforeMessageId?: string;
+          embedding?: Array<number>;
+          embeddingModel?: string;
           limit: number;
           messageRange?: { after: number; before: number };
           searchAllMessagesForUserId?: string;
           text?: string;
           threadId?: string;
-          vector?: Array<number>;
-          vectorModel?: string;
           vectorScoreThreshold?: number;
         },
         Array<{

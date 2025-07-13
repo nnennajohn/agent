@@ -29,9 +29,8 @@
 
     /* Import paths */
     "paths": {
-      "@/*": ["./src/*"],
-      "@example/*": ["../examples/*"]
+      "@/*": ["./ui/*"]
     }
   },
-  "include": ["src", "examplesModels.ts", "../examples/*/src"]
+  "include": ["ui"]
 }

@@ -1,33 +1,41 @@
-import { vStreamArgs } from "@convex-dev/agent";
+import {
+  getThreadMetadata,
+  listMessages,
+  syncStreams,
+  vStreamArgs,
+} from "@convex-dev/agent";
 import { vEntryId, vSearchEntry, vSearchResult } from "@convex-dev/rag";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { agent } from "../chatBasic";
-import { internalMutation, mutation, query } from "../_generated/server";
+import { internalMutation, query } from "../_generated/server";
 import { getAuthUserId } from "../utils";
-import { rag } from "./ragBasic";
+import { rag } from "./ragAsPrompt";
+import { components } from "../_generated/api";
 
-export const createThread = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    const { threadId } = await agent.createThread(ctx, { userId });
-    return threadId;
-  },
-});
-
-export const listMessages = query({
+/**
+ * Lists messages for a thread including the context used to generate them,
+ * based on context saved when using RAG.
+ */
+export const listMessagesWithContext = query({
   args: {
     threadId: v.string(),
     paginationOpts: paginationOptsValidator,
     streamArgs: vStreamArgs,
   },
   handler: async (ctx, args) => {
-    const results = await agent.listMessages(ctx, {
+    const userId = await getAuthUserId(ctx);
+    const threadMetadata = await getThreadMetadata(ctx, components.agent, {
+      threadId: args.threadId,
+    });
+    if (threadMetadata.userId && threadMetadata.userId !== userId) {
+      throw new Error("You are not authorized to access this thread");
+    }
+
+    const results = await listMessages(ctx, components.agent, {
       threadId: args.threadId,
       paginationOpts: args.paginationOpts,
     });
-    const streams = await agent.syncStreams(ctx, {
+    const streams = await syncStreams(ctx, components.agent, {
       threadId: args.threadId,
       streamArgs: args.streamArgs,
     });
