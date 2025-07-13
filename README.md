@@ -2,6 +2,9 @@
 
 [![npm version](https://badge.fury.io/js/@convex-dev%2fagent.svg)](https://badge.fury.io/js/@convex-dev%2fagent)
 
+```sh
+npm i @convex-dev/agent
+```
 <!-- START: Include on https://convex.dev/components -->
 
 AI Agent framework built on Convex.
@@ -19,7 +22,7 @@ AI Agent framework built on Convex.
   Enables long-lived, durable workflows defined as code.
 - Reactive & realtime updates from asynchronous functions / workflows.
 - Support for streaming text and storing the final result.
-  See [examples/chat-streaming](./examples/chat-streaming/README.md).
+  See [chat/chat-streaming](./example/convex/chat/README.md).
 - Rate limiting for chat messages and token usage via the
   [Rate Limiter component](https://convex.dev/components/rate-limiter).
   See [examples/rate-limiting](./examples/rate-limiting/README.md).
@@ -30,11 +33,15 @@ AI Agent framework built on Convex.
 [![Powerful AI Apps Made Easy with the Agent Component](https://thumbs.video-to-markdown.com/b323ac24.jpg)](https://youtu.be/tUKMPUlOCHY)
 
 Play with the [examples](./examples/) by cloning this repo and running:
+
 ```sh
+npm run setup
 npm run example
 ```
 
 ## Example usage:
+
+See example usage in [example/convex](./example/convex).
 
 ```ts
 // Define an agent similarly to the AI SDK
@@ -283,8 +290,8 @@ function MyComponent({ threadId }: { threadId: string }) {
 }
 ```
 
-See [examples/chat-basic](./examples/chat-basic) for an example, and
-[examples/chat-streaming](./examples/chat-streaming) for a streaming example.
+See [ChatBasic.tsx](./example/ui/ChatBasic.tsx) for an example, and
+[ChatStreaming.tsx](./example/ui/ChatStreaming.tsx) for a streaming example.
 
 ### Configuring the context of message generation
 
@@ -558,7 +565,7 @@ export const supportAgentWorkflow = workflow.define({
 });
 ```
 
-See another example in [example.ts](./example/convex/example.ts#L120).
+See another example in [workflows/chaining.ts](./example/convex/workflows/chaining.ts).
 
 ## Extra control: how to do more things yourself
 
@@ -638,12 +645,6 @@ const ids = await ctx.runMutation(
 );
 ```
 
-See example usage in [example.ts](./example/convex/example.ts).
-Read more in [this Stack post](https://stack.convex.dev/ai-agents).
-
-```sh
-npm i @convex-dev/agent
-```
 
 ### Tracking token usage
 

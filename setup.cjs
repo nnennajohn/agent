@@ -14,3 +14,7 @@ execSync("npm install", {
   cwd: join(__dirname, "./example"),
   stdio: "inherit",
 });
+execSync("npx convex dev --live-component-sources --until-success", {
+  cwd: join(__dirname, "./example"),
+  stdio: "inherit",
+});
