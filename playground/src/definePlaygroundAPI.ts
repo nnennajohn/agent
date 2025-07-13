@@ -29,7 +29,7 @@ export type PlaygroundAPI = ApiFromModules<{
 export type AgentsFn<DataModel extends GenericDataModel> = (
   ctx: GenericActionCtx<DataModel> | GenericQueryCtx<DataModel>,
   args: { userId: string | undefined; threadId: string | undefined }
-) => Promise<Agent<ToolSet>[]>;
+) => Agent<ToolSet>[] | Promise<Agent<ToolSet>[]>;
 
 // Playground API definition
 export function definePlaygroundAPI<DataModel extends GenericDataModel>(
