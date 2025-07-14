@@ -4,6 +4,8 @@ import { weatherAgent } from "./agents/weather";
 import { fashionAgent } from "./agents/fashion";
 import { storyAgent } from "./agents/story";
 import { agent as basicAgent } from "./agents/simple";
+import { fileAgent } from "./files/addFile";
+import { rateLimitedAgent } from "./rate_limiting/rateLimiting";
 
 /**
  * Here we expose the API so the frontend can access it.
@@ -29,5 +31,7 @@ export const {
     fashionAgent,
     basicAgent,
     storyAgent,
+    fileAgent,
+    rateLimitedAgent,
   ],
 });

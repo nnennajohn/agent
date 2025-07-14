@@ -3,8 +3,8 @@ import { Toaster } from "./components/ui/toaster";
 import { Index } from "./examples/Index";
 import ChatBasic from "./ChatBasic";
 import ChatStreaming from "./ChatStreaming";
-// import FilesImages from "./FilesImages";
-// import RateLimiting from "./RateLimiting";
+import FilesImages from "./FilesImages";
+import RateLimiting from "./RateLimiting";
 import { WeatherFashion } from "./WeatherFashion";
 import RagBasic from "./examples/RagBasic";
 
@@ -26,9 +26,9 @@ export default function App() {
             <Route path="/" element={<Index />} />
             <Route path="/chat-basic" element={<ChatBasic />} />
             <Route path="/chat-streaming" element={<ChatStreaming />} />
-            {/* <Route path="/files-images" element={<FilesImages />} /> */}
+            <Route path="/files-images" element={<FilesImages />} />
             <Route path="/rag-basic" element={<RagBasic />} />
-            {/* <Route path="/rate-limiting" element={<RateLimiting />} /> */}
+            <Route path="/rate-limiting" element={<RateLimiting />} />
             <Route path="/weather-fashion" element={<WeatherFashion />} />
           </Routes>
         </main>
