@@ -3,10 +3,12 @@ import LeftPanel from "@/components/LeftPanel";
 import MiddlePanel from "@/components/MiddlePanel";
 import RightPanel from "@/components/RightPanel";
 import { useToast } from "@/components/ui/use-toast";
-import { usePaginatedQuery, useQuery, useAction } from "convex/react";
+import { useQuery, useAction } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react";
 import type { PlaygroundAPI } from "../definePlaygroundAPI";
 import { ContextMessage, Thread, Agent } from "@/types";
 import { ContextOptions, StorageOptions } from "@convex-dev/agent";
+import { useThreadMessages } from "@convex-dev/agent/react";
 import {
   DEFAULT_CONTEXT_OPTIONS,
   DEFAULT_STORAGE_OPTIONS,
@@ -55,7 +57,7 @@ const Play = ({ apiKey, api }: PlayProps) => {
     }
   }, [threads.results, selectedThreadId]);
 
-  const messages = usePaginatedQuery(
+  const messages = useThreadMessages(
     api.listMessages,
     selectedThreadId ? { apiKey, threadId: selectedThreadId } : "skip",
     { initialNumItems: 20 }
