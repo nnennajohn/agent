@@ -4,6 +4,8 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
+    "setup": "cd .. && node setup.cjs && cd example && npm run dev:backend -- --once",
+    "example": "npm run dev",
     "dev": "run-p dev:frontend dev:backend",
     "dev:backend": "convex dev --live-component-sources --typecheck-components",
     "dev:frontend": "vite",
