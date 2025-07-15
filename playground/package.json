@@ -99,18 +99,16 @@
     "vite": "^6.3.5"
   },
   "peerDependencies": {
-    "@convex-dev/agent": "^0.1.5",
+    "@convex-dev/agent": "^0.1.14",
     "convex": "^1.23.0",
     "convex-helpers": "^0.1.99",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@convex-dev/agent": "file:../",
     "@eslint/js": "^9.9.0",
     "@types/node": "^22.5.5",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "convex": "file:../node_modules/convex",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",

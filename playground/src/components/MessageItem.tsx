@@ -133,7 +133,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 expandedToolCall === toolCall.toolCallId;
               return (
                 <div
-                  key={toolCall.toolCallId}
+                  key={toolCall.toolCallId + " " + i}
                   className={`tool-call-bubble mt-2 ${
                     isToolCallExpanded
                       ? "bg-secondary border border-primary/30 rounded-lg"

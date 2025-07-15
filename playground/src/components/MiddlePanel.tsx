@@ -2,7 +2,7 @@ import React from "react";
 import MessageList from "./MessageList";
 import { Agent, Message, User } from "../types";
 import MessageComposer from "./MessageComposer";
-import { ContextOptions, StorageOptions } from "../../../dist/esm/client";
+import { ContextOptions, StorageOptions } from "@convex-dev/agent";
 
 interface MiddlePanelProps {
   agents: Agent[] | undefined;
