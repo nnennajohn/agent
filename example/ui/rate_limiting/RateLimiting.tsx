@@ -124,12 +124,21 @@ export default function Example() {
                 </p>
               </div>
               <div className="">
-                <Monitor
-                  key="sendMessage"
-                  getRateLimitValueQuery={api.rate_limiting.utils.getRateLimit}
-                  getServerTimeMutation={api.rate_limiting.utils.getServerTime}
-                  name="sendMessage"
-                />
+                <div className="w-full max-w-7xl mx-auto p-6 space-y-8 animate-fade-in">
+                  <Monitor
+                    key="sendMessage"
+                    getRateLimitValueQuery={
+                      api.rate_limiting.utils.getRateLimit
+                    }
+                    opts={{
+                      getServerTimeMutation:
+                        api.rate_limiting.utils.getServerTime,
+                      name: "sendMessage",
+                    }}
+                    consumptionHistory={[]}
+                    height="250px"
+                  />
+                </div>
               </div>
             </div>
 
@@ -144,12 +153,21 @@ export default function Example() {
                 </p>
               </div>
               <div className="">
-                <Monitor
-                  getRateLimitValueQuery={api.rate_limiting.utils.getRateLimit}
-                  getServerTimeMutation={api.rate_limiting.utils.getServerTime}
-                  count={previousUsage ?? 0 + question.length}
-                  name="tokenUsagePerUser"
-                />
+                <div className="w-full max-w-7xl mx-auto p-6 space-y-8 animate-fade-in">
+                  <Monitor
+                    getRateLimitValueQuery={
+                      api.rate_limiting.utils.getRateLimit
+                    }
+                    opts={{
+                      getServerTimeMutation:
+                        api.rate_limiting.utils.getServerTime,
+                      name: "tokenUsagePerUser",
+                      count: previousUsage ?? 0 + question.length,
+                    }}
+                    consumptionHistory={[]}
+                    height="250px"
+                  />
+                </div>
               </div>
             </div>
           </div>

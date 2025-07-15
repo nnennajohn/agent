@@ -1,10 +1,22 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useQuery } from "convex/react";
-import {
+import type {
   GetRateLimitValueQuery,
-  useRateLimit,
   UseRateLimitOptions,
 } from "@convex-dev/rate-limiter/react";
+import { useRateLimit } from "@convex-dev/rate-limiter/react";
+import { useQuery } from "convex/react";
+
+interface ConsumptionEvent {
+  timestamp: number;
+  success: boolean;
+}
+
+interface MonitorProps {
+  getRateLimitValueQuery: GetRateLimitValueQuery;
+  opts?: UseRateLimitOptions;
+  consumptionHistory?: ConsumptionEvent[];
+  height?: string | number;
+}
 
 function formatNumber(value: number) {
   if (value < 1000) return value.toFixed(1);
@@ -12,24 +24,17 @@ function formatNumber(value: number) {
   return (value / 1000000).toFixed(1) + "M";
 }
 
-export const Monitor = (
-  props: UseRateLimitOptions & {
-    getRateLimitValueQuery: GetRateLimitValueQuery;
-  },
-) => {
-  // UI state
+export function Monitor({
+  getRateLimitValueQuery,
+  opts,
+  consumptionHistory = [],
+  height = "320px",
+}: MonitorProps) {
   const [timelineData, setTimelineData] = useState<
     Array<{ timestamp: number; value: number }>
   >([]);
 
-  // API calls
-  const rateLimitValue = useQuery(props.getRateLimitValueQuery, {
-    name: props.name,
-  });
-  const capacity = rateLimitValue?.config.capacity ?? 0;
-  const { status, check } = useRateLimit(props.getRateLimitValueQuery, props);
-
-  // Timeline visualization logic with proper DPI scaling
+  // Canvas refs and state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
@@ -39,9 +44,18 @@ export const Monitor = (
     dpr: number;
   } | null>(null);
 
-  useEffect(() => {
-    if (!status) return;
+  const { check } = useRateLimit(getRateLimitValueQuery, opts);
+  const raw = useQuery(getRateLimitValueQuery, {
+    config: opts?.config,
+    name: opts?.name,
+    key: opts?.key,
+    sampleShards: opts?.sampleShards,
+  });
 
+  const capacity = raw?.config.capacity ?? 1;
+
+  // Update timeline data every 100ms with calculated values
+  useEffect(() => {
     const updateTimeline = () => {
       const now = Date.now();
       // Calculate current value using server time for rate limit calculation
@@ -59,12 +73,12 @@ export const Monitor = (
     updateTimeline();
 
     // Set up interval for regular updates
-    const interval = setInterval(updateTimeline, 250);
+    const interval = setInterval(updateTimeline, 200);
 
     return () => {
       clearInterval(interval);
     };
-  }, [status, check]);
+  }, [check]);
 
   // Setup canvas with proper DPI scaling (only when size changes)
   const setupCanvas = useCallback(() => {
@@ -132,7 +146,7 @@ export const Monitor = (
     ctx.fillStyle = "#374151";
     ctx.font = "bold 14px Inter, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(props.name ?? "Tokens", width / 2, padding - 10);
+    ctx.fillText(opts?.name ?? "Tokens", width / 2, padding - 10);
 
     // Draw background grid
     ctx.strokeStyle = "#f3f4f6";
@@ -283,6 +297,37 @@ export const Monitor = (
       ctx.fillText(labelText, labelX + labelWidth / 2, labelY - 6);
     }
 
+    // Draw consumption dots at bottom of graph
+    const recentEvents = consumptionHistory.filter(
+      (event) => now - event.timestamp < 10000,
+    );
+
+    recentEvents.forEach((event) => {
+      const x =
+        padding + ((event.timestamp - tenSecondsAgo) / 10000) * plotWidth;
+
+      // Position dot at the bottom of the graph
+      const dotY = height - padding - 5; // 5px above the X-axis
+      const dotRadius = 4;
+
+      // Draw dot with appropriate color
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotRadius, 0, 2 * Math.PI);
+
+      if (event.success) {
+        ctx.fillStyle = "#10b981"; // Green for success
+      } else {
+        ctx.fillStyle = "#ef4444"; // Red for failure
+      }
+
+      ctx.fill();
+
+      // Add a subtle border
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
     // Draw axis labels with modern typography
     ctx.fillStyle = "#6b7280";
     ctx.font = "12px Inter, sans-serif";
@@ -306,7 +351,7 @@ export const Monitor = (
 
     // Schedule next frame
     animationRef.current = requestAnimationFrame(drawTimeline);
-  }, [timelineData, capacity, props.name]);
+  }, [timelineData, consumptionHistory, capacity, opts?.name]);
 
   // Setup canvas when component mounts or container size changes
   useEffect(() => {
@@ -334,14 +379,12 @@ export const Monitor = (
   }, [setupCanvas]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 space-y-8 animate-fade-in">
-      <div
-        ref={containerRef}
-        className="relative w-full bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200"
-        style={{ height: "250px" }}
-      >
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-      </div>
+    <div
+      ref={containerRef}
+      className="relative w-full bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200"
+      style={{ height }}
+    >
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
     </div>
   );
 };

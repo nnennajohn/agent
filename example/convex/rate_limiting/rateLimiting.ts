@@ -1,19 +1,9 @@
-import { paginationOptsValidator } from "convex/server";
 import { Agent, saveMessage, UsageHandler } from "@convex-dev/agent";
 import { components, internal } from "../_generated/api";
 import { chat, textEmbedding } from "../modelsForDemo";
-import {
-  ActionCtx,
-  internalAction,
-  internalMutation,
-  mutation,
-  MutationCtx,
-  query,
-  QueryCtx,
-} from "../_generated/server";
+import { internalAction, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { MINUTE, RateLimiter, SECOND } from "@convex-dev/rate-limiter";
-import { DataModel } from "../_generated/dataModel";
 import { usageHandler as normalUsageHandler } from "../usage_tracking/usageHandler";
 import { getAuthUserId } from "../utils";
 import { authorizeThreadAccess } from "../threads";
