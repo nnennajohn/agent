@@ -1,18 +1,18 @@
 import { useMutation, useQuery } from "convex/react";
-import { Toaster } from "./components/ui/toaster";
-import { api } from "../convex/_generated/api";
+import { Toaster } from "../components/ui/toaster";
+import { api } from "../../convex/_generated/api";
 import {
   toUIMessages,
   useThreadMessages,
   type UIMessage,
 } from "@convex-dev/agent/react";
 import { useCallback, useEffect, useState, useRef, useReducer } from "react";
-import { toast } from "./hooks/use-toast";
+import { toast } from "../hooks/use-toast";
 import { isRateLimitError } from "@convex-dev/rate-limiter";
 import { useRateLimit } from "@convex-dev/rate-limiter/react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Monitor } from "./components/Monitor";
+import { Monitor } from "../components/Monitor";
 
 dayjs.extend(relativeTime);
 

@@ -1,6 +1,6 @@
 import { useAction, useMutation } from "convex/react";
-import { Toaster } from "./components/ui/toaster";
-import { api } from "../convex/_generated/api";
+import { Toaster } from "../components/ui/toaster";
+import { api } from "../../convex/_generated/api";
 import {
   optimisticallySendMessage,
   toUIMessages,
@@ -8,7 +8,7 @@ import {
   type UIMessage,
 } from "@convex-dev/agent/react";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "./hooks/use-toast";
+import { toast } from "../hooks/use-toast";
 
 function getThreadIdFromHash() {
   return window.location.hash.replace(/^#/, "") || undefined;

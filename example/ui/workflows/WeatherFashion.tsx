@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { usePaginatedQuery } from "convex-helpers/react";
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import ReactMarkdown from "react-markdown";
 import { useStreamingText, useThreadMessages } from "@convex-dev/agent/react";
 const userId = "test_user"; // You'd use auth to access this on the server in a real app
