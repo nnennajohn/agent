@@ -1,5 +1,6 @@
 import type { EmbeddingModelV1, LanguageModelV1 } from "@ai-sdk/provider";
 import type {
+  AssistantContent,
   CoreMessage,
   DeepPartial,
   FilePart,
@@ -10,6 +11,7 @@ import type {
   StreamObjectResult,
   StreamTextResult,
   ToolSet,
+  UserContent,
 } from "ai";
 import { generateObject, generateText, streamObject, streamText } from "ai";
 import { assert } from "convex-helpers";
@@ -1683,7 +1685,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
     return Promise.all(
       messages.map(async (message): Promise<CoreMessage> => {
         if (
-          message.role !== "user" ||
+          (message.role !== "user" && message.role !== "assistant") ||
           typeof message.content === "string" ||
           !Array.isArray(message.content)
         ) {
@@ -1693,6 +1695,10 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
         const processedContent = await Promise.all(
           message.content.map(async (part) => {
             if (part.type === "image" && part.image instanceof URL) {
+              assert(
+                message.role === "user",
+                "Images can only be in user messages"
+              );
               if (this._isLocalhostUrl(part.image)) {
                 const imageData = await this._downloadFile(part.image);
                 return {
@@ -1716,11 +1722,17 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
             return part;
           })
         );
-
-        return {
-          ...message,
-          content: processedContent,
-        };
+        if (message.role === "user") {
+          return {
+            ...message,
+            content: processedContent as UserContent,
+          };
+        } else {
+          return {
+            ...message,
+            content: processedContent as AssistantContent,
+          };
+        }
       })
     );
   }
