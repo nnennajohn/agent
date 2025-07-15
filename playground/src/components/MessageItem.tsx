@@ -79,7 +79,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       </div>
 
-      {message.text ? (
+      {message.text && (
         <div
           className={
             message.message?.role === "user"
@@ -91,37 +91,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
             <div key={i}>{line}</div>
           ))}
         </div>
-      ) : (
-        message.files &&
-        message.files.map((file, i) =>
-          file.url ? (
-            <div key={message._id + " file " + i} className="mt-2">
-              <img
-                src={file.url}
-                className="rounded-lg max-w-full max-h-[300px]"
-              />
-            </div>
-          ) : (
-            file.data &&
-            (file.mimeType.startsWith("image/") ? (
-              <div key={i} className="mt-2">
-                <img
-                  src={URL.createObjectURL(
-                    new Blob([file.data], {
-                      type: file.mimeType,
-                    })
-                  )}
-                  className="rounded-lg max-w-full max-h-[300px]"
-                />
-              </div>
-            ) : (
-              <div key={i} className="mt-2">
-                <FileIcon size={14} />
-                <span>{file.mimeType}</span>
-              </div>
-            ))
-          )
-        )
       )}
 
       <div className="ml-6 mt-2">
@@ -200,6 +169,33 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     {part.source.title ?? part.source.url}
                   </a>
                 </div>
+              );
+            case "file":
+              return part.mimeType.startsWith("image/") ? (
+                part.data.startsWith("http") ? (
+                  <div key={message._id + " file " + i} className="mt-2">
+                    <img
+                      src={part.data}
+                      className="rounded-lg max-w-full max-h-[300px]"
+                    />
+                  </div>
+                ) : (
+                  <div key={i} className="mt-2">
+                    <img
+                      src={URL.createObjectURL(
+                        new Blob([part.data], {
+                          type: part.mimeType,
+                        })
+                      )}
+                      className="rounded-lg max-w-full max-h-[300px]"
+                    />
+                  </div>
+                )
+              ) : (
+                <a key={i} className="mt-2" href={part.data} target="_blank">
+                  <FileIcon size={14} />
+                  <span>{part.mimeType}</span>
+                </a>
               );
           }
         })}
