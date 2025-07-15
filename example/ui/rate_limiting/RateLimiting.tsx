@@ -135,7 +135,6 @@ export default function Example() {
                         api.rate_limiting.utils.getServerTime,
                       name: "sendMessage",
                     }}
-                    consumptionHistory={[]}
                     height="250px"
                   />
                 </div>
@@ -164,7 +163,6 @@ export default function Example() {
                       name: "tokenUsagePerUser",
                       count: previousUsage ?? 0 + question.length,
                     }}
-                    consumptionHistory={[]}
                     height="250px"
                   />
                 </div>
