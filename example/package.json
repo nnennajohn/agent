@@ -35,7 +35,7 @@
     "dayjs": "^1.11.13",
     "lucide-react": "^0.487.0",
     "openai": "^5.9.0",
-    "react": "^19.1.0",
+    "react": "file:../node_modules/react",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.55.0",
     "react-markdown": "^10.1.0",
