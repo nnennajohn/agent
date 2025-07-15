@@ -25,7 +25,7 @@ AI Agent framework built on Convex.
   See [chat/chat-streaming](./example/convex/chat/README.md).
 - Rate limiting for chat messages and token usage via the
   [Rate Limiter component](https://convex.dev/components/rate-limiter).
-  See [examples/rate-limiting](./examples/rate-limiting/README.md).
+  See [examples/rate-limiting](./example/convex/rate_limiting/README.md).
 - Optionally filter tool calls out of the thread history.
 
 [Read the associated Stack post here](https://stack.convex.dev/ai-agents).
