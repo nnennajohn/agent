@@ -846,6 +846,12 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
     const { lastMessageId, messages } = await this.saveMessages(ctx, {
       threadId: args.threadId,
       userId: args.userId,
+      embeddings: args.embedding
+        ? {
+            model: args.embedding.model,
+            vectors: [args.embedding.vector],
+          }
+        : undefined,
       messages:
         args.prompt !== undefined
           ? [{ role: "user", content: args.prompt }]
@@ -882,7 +888,6 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
     let embeddings:
       | {
           vectors: (number[] | null)[];
-          dimension: VectorDimension;
           model: string;
         }
       | undefined;
@@ -2017,7 +2022,7 @@ type SaveMessagesArgs = {
   /**
    * The embeddings to save with the messages.
    */
-  embeddings?: MessageEmbeddings;
+  embeddings?: Omit<MessageEmbeddings, "dimension">;
 };
 
 /**
@@ -2033,12 +2038,24 @@ export async function saveMessages(
     agentName?: string;
   }
 ) {
+  let embeddings: MessageEmbeddings | undefined;
+  if (args.embeddings) {
+    const dimension = args.embeddings.vectors.find((v) => v !== null)?.length;
+    if (dimension) {
+      validateVectorDimension(dimension);
+      embeddings = {
+        model: args.embeddings.model,
+        dimension,
+        vectors: args.embeddings.vectors,
+      };
+    }
+  }
   const result = await ctx.runMutation(component.messages.addMessages, {
     threadId: args.threadId,
     userId: args.userId,
     agentName: args.agentName,
     promptMessageId: args.promptMessageId,
-    embeddings: args.embeddings,
+    embeddings,
     messages: await Promise.all(
       args.messages.map(async (m, i) => {
         const { message, fileIds } = await serializeMessage(ctx, component, m);
@@ -2107,19 +2124,22 @@ export async function saveMessage(
     agentName?: string;
   }
 ) {
-  let embeddings: MessageEmbeddings | undefined;
-  if (args.embedding) {
-    const dimension = args.embedding.vector.length;
-    validateVectorDimension(dimension);
+  let embeddings:
+    | {
+        vectors: number[][];
+        model: string;
+      }
+    | undefined;
+  if (args.embedding && args.embedding.vector) {
     embeddings = {
       model: args.embedding.model,
-      dimension,
       vectors: [args.embedding.vector],
     };
   }
   const { lastMessageId, messages } = await saveMessages(ctx, component, {
     threadId: args.threadId,
     userId: args.userId,
+    agentName: args.agentName,
     messages:
       args.prompt !== undefined
         ? [{ role: "user", content: args.prompt }]
