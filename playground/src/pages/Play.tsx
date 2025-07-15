@@ -5,7 +5,7 @@ import RightPanel from "@/components/RightPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useAction } from "convex/react";
 import { usePaginatedQuery } from "convex-helpers/react";
-import type { PlaygroundAPI } from "../definePlaygroundAPI";
+import type { PlaygroundAPI } from "../definePlaygroundAPI.js";
 import { ContextMessage, Thread, Agent } from "@/types";
 import { ContextOptions, StorageOptions } from "@convex-dev/agent";
 import { useThreadMessages } from "@convex-dev/agent/react";
@@ -19,7 +19,7 @@ interface PlayProps {
   api: PlaygroundAPI;
 }
 
-const Play = ({ apiKey, api }: PlayProps) => {
+function Play({ apiKey, api }: PlayProps) {
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const [selectedThreadId, setSelectedThreadId] = useState<
