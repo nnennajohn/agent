@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "convex/react";
-import { Toaster } from "./components/ui/toaster";
+import { Toaster } from "../components/ui/toaster";
 import { usePaginatedQuery } from "convex-helpers/react";
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import {
   optimisticallySendMessage,
   toUIMessages,
@@ -9,7 +9,7 @@ import {
   type UIMessage,
 } from "@convex-dev/agent/react";
 import { useCallback, useEffect, useState } from "react";
-import { cn } from "./lib/utils";
+import { cn } from "../lib/utils";
 
 function getThreadIdFromHash() {
   return window.location.hash.replace(/^#/, "") || undefined;

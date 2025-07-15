@@ -1,6 +1,6 @@
 import { useMutation } from "convex/react";
-import { Toaster } from "./components/ui/toaster";
-import { api } from "../convex/_generated/api";
+import { Toaster } from "../components/ui/toaster";
+import { api } from "../../convex/_generated/api";
 import {
   optimisticallySendMessage,
   toUIMessages,

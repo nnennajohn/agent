@@ -3,12 +3,12 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import "./index.css";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
-import ChatBasic from "./ChatBasic";
-import ChatStreaming from "./ChatStreaming";
-import FilesImages from "./FilesImages";
-import RateLimiting from "./RateLimiting";
-import { WeatherFashion } from "./WeatherFashion";
-import RagBasic from "./examples/RagBasic";
+import ChatBasic from "./chat/ChatBasic";
+import ChatStreaming from "./chat/ChatStreaming";
+import FilesImages from "./files/FilesImages";
+import RateLimiting from "./rate_limiting/RateLimiting";
+import { WeatherFashion } from "./workflows/WeatherFashion";
+import RagBasic from "./rag/RagBasic";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
