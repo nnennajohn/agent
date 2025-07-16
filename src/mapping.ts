@@ -187,6 +187,9 @@ export async function serializeContent(
           }
           return { ...part, data };
         }
+        case "tool-result": {
+          return { ...part, result: part.result ?? null };
+        }
         default:
           return part;
       }
