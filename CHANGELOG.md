@@ -11,6 +11,7 @@
   `saveMessages`, `getThreadMetadata`, `createThread`, `fetchContextMessages`,
   `listMessages`, `syncStreams`
 - Improved the `ctx` type for the raw request handler and exposed more types
+- Add `agentName` to `UIMessage`
 - Fix: stream deletion is idempotent and cleanup is canceled if it's already deleted.
 
 ## 0.1.14
