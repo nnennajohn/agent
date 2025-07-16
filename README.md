@@ -32,7 +32,7 @@ AI Agent framework built on Convex.
 
 [![Powerful AI Apps Made Easy with the Agent Component](https://thumbs.video-to-markdown.com/b323ac24.jpg)](https://youtu.be/tUKMPUlOCHY)
 
-Play with the [examples](./examples/) by cloning this repo and running:
+Play with the [example](./example/) by cloning this repo and running:
 
 ```sh
 npm run setup

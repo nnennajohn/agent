@@ -1,12 +1,13 @@
-import { internal } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import { action, internalAction, mutation, query } from "../_generated/server";
+import { saveMessage } from "@convex-dev/agent";
 import { v } from "convex/values";
 import { agent } from "../agents/simple";
 import { authorizeThreadAccess } from "../threads";
 import { paginationOptsValidator } from "convex/server";
 
 /**
- * OPTION 1:
+ * OPTION 1 (BASIC):
  * Generating via a single action call
  */
 
@@ -14,8 +15,7 @@ export const generateTextInAnAction = action({
   args: { prompt: v.string(), threadId: v.string() },
   handler: async (ctx, { prompt, threadId }) => {
     await authorizeThreadAccess(ctx, threadId);
-    const { thread } = await agent.continueThread(ctx, { threadId });
-    const result = await thread.generateText({ prompt });
+    const result = await agent.generateText(ctx, { threadId }, { prompt });
     return result.text;
   },
 });
@@ -31,7 +31,7 @@ export const sendMessage = mutation({
   args: { prompt: v.string(), threadId: v.string() },
   handler: async (ctx, { prompt, threadId }) => {
     await authorizeThreadAccess(ctx, threadId);
-    const { messageId } = await agent.saveMessage(ctx, {
+    const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       prompt,
     });
@@ -47,10 +47,12 @@ export const sendMessage = mutation({
 export const generateResponse = internalAction({
   args: { promptMessageId: v.string(), threadId: v.string() },
   handler: async (ctx, { promptMessageId, threadId }) => {
-    const { thread } = await agent.continueThread(ctx, { threadId });
-    await thread.generateText({ promptMessageId });
+    await agent.generateText(ctx, { threadId }, { promptMessageId });
   },
 });
+
+// Equivalent:
+// export const generateResponse = agent.asTextAction();
 
 /**
  * Query & subscribe to messages & threads
