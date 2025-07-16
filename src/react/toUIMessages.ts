@@ -9,6 +9,7 @@ export type UIMessage = AIUIMessage & {
   order: number;
   stepOrder: number;
   status: "streaming" | MessageStatus;
+  agentName?: string;
 };
 
 export function toUIMessages(
@@ -36,6 +37,7 @@ export function toUIMessages(
         ...common,
         role: "system",
         content: text,
+        agentName: message.agentName,
         parts: [{ type: "text", text }],
       });
     } else if (coreMessage.role === "user") {
@@ -69,6 +71,7 @@ export function toUIMessages(
         assistantMessage = {
           ...common,
           role: "assistant",
+          agentName: message.agentName,
           content: "",
           parts: [],
         };
