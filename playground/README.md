@@ -69,17 +69,3 @@ It uses the `VITE_CONVEX_URL` env variable, usually pulling it from .env.local.
 - If you used a different path for `convex/playground.ts` you can enter it.
   E.g. if you had `convex/foo/bar.ts` where you exported the playground API,
   you'd put in `foo/bar`.
-
-## Feature wishlist (contributions welcome!)
-
-- Show threads that aren't associated with a user as "no user" in the dropdown.
-- Add a "fork thread" button in the right message detail sidebar.
-- Add a "retry" button to regenerate a response while tuning the prompt/context.
-- Show the contextual messages with their rank in vector & text search, to get
-  a sense of what is being found via text vs. vector vs. recency search.
-- Show the agent's default context & storage options.
-- Show tools and allow calling them directly.
-- Generate objects from the UI, not just text.
-- Archive messages
-- Configure which tools are available when doing one-off messaging.
-- Trace older messages for what exact context they used.
