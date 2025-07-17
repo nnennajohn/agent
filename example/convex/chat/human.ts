@@ -4,11 +4,26 @@ import {
   syncStreams,
   vStreamArgs,
 } from "@convex-dev/agent";
-import { internalMutation, mutation, query } from "../_generated/server";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  mutation,
+  query,
+} from "../_generated/server";
 import { v } from "convex/values";
 import { components } from "../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { authorizeThreadAccess } from "../threads";
+import { z } from "zod";
+import { tool } from "ai";
+import { agent } from "../agents/simple";
+
+/**
+ * ===============================
+ * OPTION 1: Sending messages as an "assistant" role
+ * ===============================
+ */
 
 /**
  * Sending a message from a human agent.
@@ -47,6 +62,94 @@ export const sendMessageFromUser = mutation({
     });
   },
 });
+
+/**
+ * ===============================
+ * OPTION 2: Sending messages as a tool call
+ * ===============================
+ */
+
+export const askHuman = tool({
+  description: "Ask a human a question",
+  parameters: z.object({
+    question: z.string().describe("The question to ask the human"),
+  }),
+});
+
+export const ask = action({
+  args: { question: v.string(), threadId: v.string() },
+  handler: async (ctx, { question, threadId }) => {
+    const result = await agent.generateText(
+      ctx,
+      { threadId },
+      {
+        prompt: question,
+        tools: { askHuman },
+      },
+    );
+    const supportRequests = result.toolCalls
+      .filter((tc) => tc.toolName === "askHuman")
+      .map(({ toolCallId, args: { question } }) => ({
+        toolCallId,
+        question,
+      }));
+    if (supportRequests.length > 0) {
+      // Do something so the support agent knows they need to respond,
+      // e.g. save a message to their inbox
+      // await ctx.runMutation(internal.example.sendToSupport, {
+      //   threadId,
+      //   supportRequests,
+      // });
+    }
+    return {
+      response: result.text,
+      supportRequests,
+      messageId: result.messageId,
+    };
+  },
+});
+
+export const humanResponseAsToolCall = internalAction({
+  args: {
+    humanName: v.string(),
+    response: v.string(),
+    toolCallId: v.string(),
+    threadId: v.string(),
+    messageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await agent.saveMessage(ctx, {
+      threadId: args.threadId,
+      message: {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            result: args.response,
+            toolCallId: args.toolCallId,
+            toolName: "askHuman",
+          },
+        ],
+      },
+      metadata: {
+        provider: "human",
+        providerMetadata: {
+          human: { name: args.humanName },
+        },
+      },
+    });
+    // Continue generating a response from the LLM
+    await agent.generateText(ctx, { threadId: args.threadId }, {
+      promptMessageId: args.messageId,
+    });
+  },
+});
+
+/**
+ * ===============================
+ * Other things
+ * ===============================
+ */
 
 /**
  * Listing messages without using an agent

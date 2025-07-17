@@ -1,26 +1,32 @@
-# Images and Files Example
+---
+title: Files and Images in Agent messages
+sidebar_label: "Files"
+sidebar_position: 1000
+description: "Working with images and files in the Agent component"
+---
 
-This example shows how to use the `@convex-dev/agent` component to work with
-images and files.
-
-See [autoSave.ts](./autoSave.ts) for a simple example of how to use the
-automatic file saving.
-
-See [addFile.ts](./addFile.ts) for an example of how to save the file,
-submit a question, and generate a response in separate steps.
-
-See [generateImage.ts](./generateImage.ts) for an example of how to generate an
-image and save it in an assistant message.
-
-See [FilesImages.tsx](../../ui/FilesImages.tsx) for the client-side code.
-
-## Running the example
+You can add images and files for the LLM to reference in the messages.
 
 NOTE: Sending URLs to LLMs is much easier with the cloud backend, since it has
 publicly available storage URLs. To develop locally you can use `ngrok` or
 similar to proxy the traffic.
 
+Example code:
+
+- [files/autoSave.ts](../example/convex/files/autoSave.ts) has a simple example
+  of how to use the automatic file saving.
+- [files/addFile.ts](../example/convex/files/addFile.ts) has an example of how
+  to save the file, submit a question, and generate a response in separate steps.
+- [files/generateImage.ts](../example/convex/files/generateImage.ts) has an
+  example of how to generate an image and save it in an assistant message.
+- [FilesImages.tsx](../example/ui/files/FilesImages.tsx) has client-side
+  code.
+
+## Running the example
+
 ```sh
+git clone https://github.com/get-convex/agent.git
+cd agent
 npm run setup
 npm run example
 ```
@@ -56,7 +62,7 @@ const { file } = await storeFile(
   components.agent,
   new Blob([bytes], { type: mimeType }),
   filename,
-  sha256,
+  sha256
 );
 const { fileId, url, storageId } = file;
 ```
@@ -122,10 +128,12 @@ Saving to the files has 3 components:
    This means you can access it directly with the `storageId` and generate URLs.
 2. Saving a reference (the storageId) to the file in the component. This will
    automatically keep track of how many messages are referencing the file, so you
-   can vacuum files that are no longer used (see [crons.ts](../crons.ts)).
+   can vacuum files that are no longer used (see
+   [files/vacuum.ts](../example/convex/files/vacuum.ts)).
 3. Inserting a URL in place of the data in the message sent to the LLM, along
-   with the mimeType and other metadata provided
-   (or [inferred](../../../src/mapping.ts#L224)).
+   with the mimeType and other metadata provided. It will be inferred if not
+   provided in
+   [`guessMimeType`](https://github.com/get-convex/agent/blob/main/src/mapping.ts#L227).
 
 ### Can I just store the file myself an pass in a URL?
 
@@ -148,13 +156,13 @@ await thread.generateText({
 
 ## Generating images
 
-There's an example in [generateImage.ts](./generateImage.ts) that
-takes a prompt, generates an image with OpenAI's dall-e 2, then saves the image
-to a thread.
+There's an example in
+[files/generateImage.ts](../example/convex/files/generateImage.ts) that takes a
+prompt, generates an image with OpenAI's dall-e 2, then saves the image to a
+thread.
 
 You can try it out with:
 
 ```sh
-// in the example directory, after you've started the backend
 npx convex run files:generateImage:replyWithImage '{prompt: "make a picture of a cat" }'
 ```

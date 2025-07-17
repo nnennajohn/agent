@@ -19,6 +19,8 @@ The main difference from your app will be:
 ## Running the example
 
 ```bash
+git clone https://github.com/get-convex/agent.git
+cd agent
 npm run setup
 npm run dev
 ```

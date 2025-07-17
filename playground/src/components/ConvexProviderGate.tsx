@@ -137,6 +137,14 @@ function ConvexProviderGate({ children }: { children: ReactNode }) {
           <h2 className="text-2xl font-bold mb-1 text-foreground">
             Configure Convex Deployment
           </h2>
+          <p className="text-sm text-foreground">
+            To use the Playground, you first must have a running Convex project
+            to connect the Playground to. See the docs for more details:
+            https://docs.convex.dev/agents
+            <br />
+            The Deployment URL is usually found in .env.local and is the URL of
+            your Convex deployment, usually ending with .cloud.
+          </p>
           <label className="text-sm font-medium text-foreground">
             Deployment URL
           </label>
