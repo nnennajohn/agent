@@ -1,10 +1,9 @@
-import { Agent, storeFile } from "@convex-dev/agent";
+import { Agent, createThread, saveMessage, storeFile } from "@convex-dev/agent";
 import { components, internal } from "../_generated/api";
 import { chat, textEmbedding } from "../modelsForDemo";
 import { action, internalAction, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getFile } from "@convex-dev/agent";
-import { FilePart, ImagePart } from "ai";
 import { getAuthUserId } from "../utils";
 import { usageHandler } from "../usage_tracking/usageHandler";
 
@@ -66,13 +65,13 @@ export const submitFileQuestion = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-    const { threadId } = await fileAgent.createThread(ctx, { userId });
+    const threadId = await createThread(ctx, components.agent, { userId });
     const { filePart, imagePart } = await getFile(
       ctx,
       components.agent,
       args.fileId,
     );
-    const { messageId } = await fileAgent.saveMessage(ctx, {
+    const { messageId } = await saveMessage(ctx, components.agent, {
       threadId,
       message: {
         role: "user",
