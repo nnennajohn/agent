@@ -164,7 +164,7 @@ for await (const textPart of result.textStream) {
 
 ### Generating an object
 
-Similar to the AI SDK, you can generate or streaman object.
+Similar to the AI SDK, you can generate or stream an object.
 The same arguments apply, except you don't have to provide a model.
 It will use the agent's default chat model.
 
@@ -413,7 +413,7 @@ and have them all saved (vs. just the last one), or avoid saving any input
 or output messages, you can pass in a `storageOptions` object, either to the
 Agent constructor or per-message.
 
-The usecase for passing in multiple messages but not saving them is if you want
+The use-case for passing in multiple messages but not saving them is if you want
 to include some extra messages for context to the LLM, but only the last message
 is the user's actual request. e.g. `messages = [...messagesFromRag, messageFromUser]`.
 The default is to save the prompt and all output messages.
@@ -441,7 +441,7 @@ To associate a response message with a previous message, you can pass in the
 `promptMessageId` to `generateText` and others.
 
 Note: if the `promptMessageId` is not the latest message in the thread, the
-context for the messsage generation will not include any messages following the
+context for the message generation will not include any messages following the
 `promptMessageId`.
 
 ## Deleting messages

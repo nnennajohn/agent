@@ -35,7 +35,7 @@ for details, but here are some key features:
 - **Custom Filtering:** Define filters on each document for efficient vector search.
 - **Chunk Context**: Get surrounding chunks for better context.
 - **Importance Weighting**: Weight content by providing a 0 to 1 "importance" to affect per-document vector search results.
-- **Chunking flexibility:** Bring your own document chunker, or use the default.
+- **Chunking flexibility:** Bring your own document chunking, or use the default.
 - **Graceful Migrations**: Migrate content or whole namespaces without disruption.
 
 ## RAG Approaches

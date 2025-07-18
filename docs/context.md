@@ -11,11 +11,13 @@ thread. This context is used to generate the next message.
 The context can include recent messages, as well as messages found via text and
 /or vector search.
 
+You can also use [RAG](./rag.md) to add extra context to your prompt.
+
 ## Customizing the context
 
 You can customize the context provided to the agent when generating messages
 with custom `contextOptions`. These can be set as defaults on the `Agent`, or
-provided at the callsite for `generateText` or others.
+provided at the call-site for `generateText` or others.
 
 ```ts
 const result = await agent.generateText(
@@ -75,7 +77,8 @@ The search will use a hybrid of text and vector search.
 
 ## Passing in messages as context
 
-You can pass in messages as context to the Agent's LLM. The final messages sent
+You can pass in messages as context to the Agent's LLM, for instance to
+implement [Retrieval-Augmented Generation](./rag.md). The final messages sent
 to the LLM will be:
 
 1. The system prompt, if one is provided or the agent has `instructions`
@@ -86,7 +89,6 @@ to the LLM will be:
 This allows you to pass in messages that are not part of the thread history and
 will not be saved automatically, but that the LLM will receive as context.
 
-This is a form of [Retrieval-Augmented Generation](./rag.md).
 
 ## Manage embeddings manually
 

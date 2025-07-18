@@ -64,7 +64,7 @@ If you get type errors about `components.agent`, ensure you've run
 The agent by default only needs a `chat` model to be configured.
 However, for vector search, you'll need a `textEmbedding` model.
 A `name` is helpful to attribute each message to a specific agent.
-Other options are defaults that can be overridden at each LLM callsite.
+Other options are defaults that can be over-ridden at each LLM call-site.
 
 ```ts
 import { tool } from "ai";
@@ -77,7 +77,7 @@ import { components } from "./_generated/api";
 const supportAgent = new Agent(components.agent, {
   // The chat completions model to use for the agent.
   chat: openai.chat("gpt-4o-mini"),
-  // The default system prompt if not overriden.
+  // The default system prompt if not over-ridden.
   instructions: "You are a helpful assistant.",
   tools: {
     // Convex tool

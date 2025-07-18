@@ -18,7 +18,7 @@ out to external services or functions. This can be useful for:
 
 You can provide tools at different times:
 
-- Agent contructor: (`new Agent(components.agent, { tools: {...} })`)
+- Agent constructor: (`new Agent(components.agent, { tools: {...} })`)
 - Creating a thread: `createThread(ctx, { tools: {...} })`
 - Continuing a thread: `continueThread(ctx, { tools: {...} })`
 - On thread functions: `thread.generateText({ tools: {...} })`
