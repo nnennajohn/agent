@@ -24,6 +24,8 @@ Instead of relying solely on the model's training data, RAG allows your AI to:
 
 ## RAG Component
 
+[![Video: Searching HUGE amounts of text with the RAG Component](https://thumbs.video-to-markdown.com/1ff18153.jpg)](https://youtu.be/dGmtAmdAaFs)
+
 The RAG component is a Convex component that allows you to add data that you can
 search. It breaks up the data into chunks and generates embeddings to use for
 vector search. See the [RAG component docs](https://convex.dev/components/rag)
