@@ -484,8 +484,11 @@ await agent.deleteMessageRange(ctx, {
 import { ... } from "@convex-dev/agent";
 ```
 
-- `serializeDataOrUrl` is a utility function that serializes an AI SDK `DataContent` or `URL` to a Convex-serializable format.
-- `filterOutOrphanedToolMessages` is a utility function that filters out tool messages that are not associated with a tool call.
+- `serializeDataOrUrl` is a utility function that serializes an AI SDK
+  `DataContent` or `URL` to a Convex-serializable format.
+- `filterOutOrphanedToolMessages` is a utility function that filters out tool
+  call messages that don't have a corresponding tool result message.
+- `extractText` is a utility function that extracts text from a `CoreMessage`-like object.
 
 ### Validators and types
 
