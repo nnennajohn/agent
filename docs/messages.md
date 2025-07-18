@@ -69,9 +69,9 @@ To generate responses asynchronously, you need to first save the message, then p
 `promptMessageId` to generate / stream text.
 
 ```ts
-import { components, internal } from "../_generated/api";
+import { components, internal } from "./_generated/api";
 import { saveMessage } from "@convex-dev/agent";
-import { internalAction, mutation } from "../_generated/server";
+import { internalAction, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Step 1: Save a user message, and kick off an async response.
@@ -195,7 +195,7 @@ To support streaming, you can also take in a `streamArgs` object and return the
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { listMessages } from "@convex-dev/agent";
-import { components } from "../_generated/api";
+import { components } from "./_generated/api";
 
 export const listThreadMessages = query({
   args: {
@@ -224,7 +224,7 @@ To retrieve the stream deltas, you only have to make a few changes to the query:
  import { paginationOptsValidator } from "convex/server";
 -import { listMessages } from "@convex-dev/agent";
 +import { vStreamArgs, listMessages, syncStreams } from "@convex-dev/agent";
- import { components } from "../_generated/api";
+ import { components } from "./_generated/api";
 
  export const listThreadMessages = query({
    args: {

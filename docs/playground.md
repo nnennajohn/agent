@@ -6,7 +6,7 @@ description: "A simple way to test, debug, and develop with the agent"
 ---
 The Playground UI is a simple way to test, debug, and develop with the agent.
 
-![Playground UI Screenshot](../playground/public/screenshot.png)
+![Playground UI Screenshot](https://get-convex.github.io/agent/screenshot.png)
 
 - Pick a user to list their threads.
 - Browse the user's threads.

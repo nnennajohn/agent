@@ -42,7 +42,7 @@ implementation in [rateLimiting.ts](../example/convex/rate_limiting/rateLimiting
 
 ```ts
 import { MINUTE, RateLimiter, SECOND } from "@convex-dev/rate-limiter";
-import { components } from "../_generated/api";
+import { components } from "./_generated/api";
 
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
   sendMessage: {
