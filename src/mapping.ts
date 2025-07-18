@@ -284,6 +284,11 @@ export function guessMimeType(buf: ArrayBuffer | string): string {
   return "application/octet-stream";
 }
 
+/**
+ * Serialize an AI SDK `DataContent` or `URL` to a Convex-serializable format.
+ * @param dataOrUrl - The data or URL to serialize.
+ * @returns The serialized data as an ArrayBuffer or the URL as a string.
+ */
 export function serializeDataOrUrl(
   dataOrUrl: DataContent | URL
 ): ArrayBuffer | string {

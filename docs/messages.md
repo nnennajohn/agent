@@ -477,3 +477,27 @@ await agent.deleteMessageRange(ctx, {
   endStepOrder: 5,
 });
 ```
+
+## Other utilities:
+
+```ts
+import { ... } from "@convex-dev/agent";
+```
+
+- `serializeDataOrUrl` is a utility function that serializes an AI SDK `DataContent` or `URL` to a Convex-serializable format.
+- `filterOutOrphanedToolMessages` is a utility function that filters out tool messages that are not associated with a tool call.
+
+### Validators and types
+
+There are types to validate and provide types for various values
+
+```ts
+import { ... } from "@convex-dev/agent";
+```
+
+- `vMessage` is a validator for a `CoreMessage`-like object (with a `role` and `content` field e.g.).
+- `MessageDoc` and `vMessageDoc` are the types for a message (which includes a `.message` field with the `vMessage` type).
+- `Thread` is the type of a thread returned from `continueThread` or `createThread`.
+- `ThreadDoc` and `vThreadDoc` are the types for thread metadata.
+- `AgentComponent` is the type of the installed component (e.g. `components.agent`).
+- `ToolCtx` is the `ctx` type for calls to `createTool` tools.

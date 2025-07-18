@@ -57,6 +57,9 @@ the client waiting.
 ### 1: Saving the file
 
 ```ts
+import { storeFile } from "@convex-dev/agent";
+import { components } from "./_generated/api";
+
 const { file } = await storeFile(
   ctx,
   components.agent,
