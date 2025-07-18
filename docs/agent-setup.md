@@ -1,5 +1,5 @@
 ---
-title: Setup
+title: "Agent Setup"
 sidebar_label: "Setup"
 sidebar_position: 100
 description: "Setting up the agent component"
@@ -58,6 +58,8 @@ export const helloWorld = action({
 
 If you get type errors about `components.agent`, ensure you've run
 `npx convex dev` to generate code for the component.
+
+That's it! Next check out creating [Threads](./threads.md) and [Messages](./messages.md).
 
 ### Customizing the agent
 

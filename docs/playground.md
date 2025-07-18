@@ -21,7 +21,7 @@ There is also a [hosted version here](https://get-convex.github.io/agent/).
 ## Setup
 
 **Note**: You must already have a Convex project set up with the Agent. See the
-[docs](./setup.md) for setup instructions.
+[docs](./agent-setup.md) for setup instructions.
 
 ```sh
 npm i @convex-dev/agent-playground

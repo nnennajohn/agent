@@ -24,7 +24,18 @@ Instead of relying solely on the model's training data, RAG allows your AI to:
 
 ## RAG Component
 
-[YouTube Video: Searching HUGE amounts of text with the RAG Component](https://youtu.be/dGmtAmdAaFs)
+<div className="center-image" style={{ maxWidth: "560px" }}>
+  <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/dGmtAmdAaFs?si=ce-M8pt6EWDZ8tfd"
+    title="RAG Component YouTube Video"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
+</div>
 
 The RAG component is a Convex component that allows you to add data that you can
 search. It breaks up the data into chunks and generates embeddings to use for
