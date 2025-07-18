@@ -5,10 +5,11 @@ sidebar_position: 100
 description: "Setting up the agent component"
 ---
 
-To install the agent component, you'll need an existing Convex project.
-New to Convex? Go through the [tutorial](https://docs.convex.dev/tutorial/).
+To install the agent component, you'll need an existing Convex project. New to
+Convex? Go through the [tutorial](https://docs.convex.dev/tutorial/).
 
-Run `npm create convex` or follow any of the [quickstarts](https://docs.convex.dev/home) to set one up.
+Run `npm create convex` or follow any of the
+[quickstarts](https://docs.convex.dev/home) to set one up.
 
 ## Installation
 
@@ -18,7 +19,8 @@ Install the component package:
 npm install @convex-dev/agent
 ```
 
-Create a `convex.config.ts` file in your app's `convex/` folder and install the component by calling `use`:
+Create a `convex.config.ts` file in your app's `convex/` folder and install the
+component by calling `use`:
 
 ```ts
 // convex/convex.config.ts
@@ -31,8 +33,8 @@ app.use(agent);
 export default app;
 ```
 
-Then run `npx convex dev` to generate code for the component.
-This needs to successfully run once before you start defining Agents.
+Then run `npx convex dev` to generate code for the component. This needs to
+successfully run once before you start defining Agents.
 
 ## Defining your first Agent
 
@@ -59,14 +61,15 @@ export const helloWorld = action({
 If you get type errors about `components.agent`, ensure you've run
 `npx convex dev` to generate code for the component.
 
-That's it! Next check out creating [Threads](./threads.md) and [Messages](./messages.md).
+That's it! Next check out creating [Threads](./threads.md) and
+[Messages](./messages.md).
 
 ### Customizing the agent
 
-The agent by default only needs a `chat` model to be configured.
-However, for vector search, you'll need a `textEmbedding` model.
-A `name` is helpful to attribute each message to a specific agent.
-Other options are defaults that can be over-ridden at each LLM call-site.
+The agent by default only needs a `chat` model to be configured. However, for
+vector search, you'll need a `textEmbedding` model. A `name` is helpful to
+attribute each message to a specific agent. Other options are defaults that can
+be over-ridden at each LLM call-site.
 
 ```ts
 import { tool } from "ai";

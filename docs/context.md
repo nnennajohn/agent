@@ -46,15 +46,17 @@ const result = await agent.generateText(
       // By default, only the current thread is searched.
       searchOtherThreads: false,
     },
-  }
+  },
 );
 ```
 
 ## Search for messages
 
-This is what the agent does automatically, but it can be useful to do manually, e.g. to find custom context to include.
+This is what the agent does automatically, but it can be useful to do manually,
+e.g. to find custom context to include.
 
-If you provide a `beforeMessageId`, it will only fetch messages from before that message.
+If you provide a `beforeMessageId`, it will only fetch messages from before that
+message.
 
 ```ts
 import type { MessageDoc } from "@convex-dev/agent";
@@ -78,17 +80,17 @@ The search will use a hybrid of text and vector search.
 ## Passing in messages as context
 
 You can pass in messages as context to the Agent's LLM, for instance to
-implement [Retrieval-Augmented Generation](./rag.md). The final messages sent
-to the LLM will be:
+implement [Retrieval-Augmented Generation](./rag.md). The final messages sent to
+the LLM will be:
 
 1. The system prompt, if one is provided or the agent has `instructions`
 2. The messages found via contextOptions
 3. The `messages` argument passed into `generateText` or other function calls.
-4. If a `prompt` argument was provided, a final `{ role: "user", content: prompt }` message.
+4. If a `prompt` argument was provided, a final
+   `{ role: "user", content: prompt }` message.
 
 This allows you to pass in messages that are not part of the thread history and
 will not be saved automatically, but that the LLM will receive as context.
-
 
 ## Manage embeddings manually
 

@@ -24,15 +24,16 @@ You can provide tools at different times:
 - On thread functions: `thread.generateText({ tools: {...} })`
 - Outside of a thread: `supportAgent.generateText(ctx, {}, { tools: {...} })`
 
-Specifying tools at each layer will overwrite the defaults.
-The tools will be `args.tools ?? thread.tools ?? agent.options.tools`.
-This allows you to create tools in a context that is convenient.
+Specifying tools at each layer will overwrite the defaults. The tools will be
+`args.tools ?? thread.tools ?? agent.options.tools`. This allows you to create
+tools in a context that is convenient.
 
 ## Creating a tool with a Convex context
 
 There are two ways to create a tool that has access to the Convex context.
 
-1. Use the `createTool` function, which is a wrapper around the AI SDK's `tool` function.
+1. Use the `createTool` function, which is a wrapper around the AI SDK's `tool`
+   function.
 
 ```ts
 export const ideaSearch = createTool({
@@ -64,11 +65,12 @@ async function createTool(ctx: ActionCtx, teamId: Id<"teams">) {
 }
 ```
 
-In both cases, the args and options match the underlying AI SDK's `tool` function.
+In both cases, the args and options match the underlying AI SDK's `tool`
+function.
 
 Note: it's highly recommended to use zod with `.describe` to provide details
-about each parameter. This will be used to provide a description of the tool
-to the LLM.
+about each parameter. This will be used to provide a description of the tool to
+the LLM.
 
 ## Using tools
 

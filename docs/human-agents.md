@@ -108,7 +108,7 @@ export const ask = action({
       {
         prompt: question,
         tools: { askHuman },
-      }
+      },
     );
     const supportRequests = result.toolCalls
       .filter((tc) => tc.toolName === "askHuman")
@@ -162,7 +162,7 @@ export const humanResponseAsToolCall = internalAction({
       { threadId: args.threadId },
       {
         promptMessageId: args.messageId,
-      }
+      },
     );
   },
 });

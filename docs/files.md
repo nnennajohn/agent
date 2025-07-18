@@ -16,11 +16,11 @@ Example code:
 - [files/autoSave.ts](../example/convex/files/autoSave.ts) has a simple example
   of how to use the automatic file saving.
 - [files/addFile.ts](../example/convex/files/addFile.ts) has an example of how
-  to save the file, submit a question, and generate a response in separate steps.
+  to save the file, submit a question, and generate a response in separate
+  steps.
 - [files/generateImage.ts](../example/convex/files/generateImage.ts) has an
   example of how to generate an image and save it in an assistant message.
-- [FilesImages.tsx](../example/ui/files/FilesImages.tsx) has client-side
-  code.
+- [FilesImages.tsx](../example/ui/files/FilesImages.tsx) has client-side code.
 
 ## Running the example
 
@@ -35,8 +35,8 @@ npm run example
 
 The standard approach is to:
 
-1. Upload the file to the database (`uploadFile` action). Note: this can be in
-   a regular action or in an httpAction, depending on what's more convenient.
+1. Upload the file to the database (`uploadFile` action). Note: this can be in a
+   regular action or in an httpAction, depending on what's more convenient.
 2. Send a message to the thread (`submitFileQuestion` action)
 3. Send the file to the LLM to generate / stream text asynchronously
    (`generateResponse` action)
@@ -65,7 +65,7 @@ const { file } = await storeFile(
   components.agent,
   new Blob([bytes], { type: mimeType }),
   filename,
-  sha256
+  sha256,
 );
 const { fileId, url, storageId } = file;
 ```
@@ -127,11 +127,11 @@ await thread.generateText({
 
 Saving to the files has 3 components:
 
-1. Saving to file storage (in your app, not in the component's storage).
-   This means you can access it directly with the `storageId` and generate URLs.
+1. Saving to file storage (in your app, not in the component's storage). This
+   means you can access it directly with the `storageId` and generate URLs.
 2. Saving a reference (the storageId) to the file in the component. This will
-   automatically keep track of how many messages are referencing the file, so you
-   can vacuum files that are no longer used (see
+   automatically keep track of how many messages are referencing the file, so
+   you can vacuum files that are no longer used (see
    [files/vacuum.ts](../example/convex/files/vacuum.ts)).
 3. Inserting a URL in place of the data in the message sent to the LLM, along
    with the mimeType and other metadata provided. It will be inferred if not

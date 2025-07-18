@@ -4,10 +4,11 @@ sidebar_label: "Threads"
 sidebar_position: 200
 description: "Group messages together in a conversation history"
 ---
-Threads are a way to group messages together in a linear history.
-All messages saved in the Agent component are associated with a thread.
-When a message is generated based on a prompt, it saves the user message and
-generated agent message(s) automatically.
+
+Threads are a way to group messages together in a linear history. All messages
+saved in the Agent component are associated with a thread. When a message is
+generated based on a prompt, it saves the user message and generated agent
+message(s) automatically.
 
 Threads can be associated with a user, and messages can each individually be
 associated with a user. By default, messages are associated with the thread's
@@ -15,11 +16,10 @@ user.
 
 ## Creating a thread
 
-You can create a thread in a mutation or action.
-If you create it in an action, it will also return a `thread` (see below) and
-you can start calling LLMs and generating messages.
-If you specify a userId, the thread will be associated with that user and
-messages will be saved to the user's history.
+You can create a thread in a mutation or action. If you create it in an action,
+it will also return a `thread` (see below) and you can start calling LLMs and
+generating messages. If you specify a userId, the thread will be associated with
+that user and messages will be saved to the user's history.
 
 ```ts
 const agent = new Agent(components.agent, { chat: chatModel });
@@ -62,11 +62,16 @@ The `thread` from `continueThread` or `createThread` (available in actions only)
 is a `Thread` object, which has convenience methods that are thread-specific:
 
 - `thread.getMetadata()` to get the `userId`, `title`, `summary` etc.
-- `thread.updateMetadata({ patch: { title, summary, userId} })` to update the metadata
-- `thread.generateText({ prompt, ... })` - equivalent to `agent.generateText(ctx, { threadId }, { prompt, ... })`
-- `thread.streamText({ prompt, ... })` - equivalent to `agent.streamText(ctx, { threadId }, { prompt, ... })`
-- `thread.generateObject({ prompt, ... })` - equivalent to `agent.generateObject(ctx, { threadId }, { prompt, ... })`
-- `thread.streamObject({ prompt, ... })` - equivalent to `agent.streamObject(ctx, { threadId }, { prompt, ... })`
+- `thread.updateMetadata({ patch: { title, summary, userId} })` to update the
+  metadata
+- `thread.generateText({ prompt, ... })` - equivalent to
+  `agent.generateText(ctx, { threadId }, { prompt, ... })`
+- `thread.streamText({ prompt, ... })` - equivalent to
+  `agent.streamText(ctx, { threadId }, { prompt, ... })`
+- `thread.generateObject({ prompt, ... })` - equivalent to
+  `agent.generateObject(ctx, { threadId }, { prompt, ... })`
+- `thread.streamObject({ prompt, ... })` - equivalent to
+  `agent.streamObject(ctx, { threadId }, { prompt, ... })`
 
 See [Messages docs](./messages.md) for more details on generating messages.
 
@@ -90,11 +95,13 @@ await thread.generateText({ prompt }); // Uses the thread-specific options.
 You can delete threads by their `threadId`.
 
 Asynchronously (from a mutation or action):
+
 ```ts
 await agent.deleteThreadAsync(ctx, { threadId });
 ```
 
 Synchronously in batches (from an action):
+
 ```ts
 await agent.deleteThreadSync(ctx, { threadId });
 ```
@@ -109,22 +116,23 @@ await agent.deleteThreadsByUserId(ctx, { userId });
 
 ```ts
 const threads = await ctx.runQuery(
-    components.agent.threads.listThreadsByUserId,
-    { userId, paginationOpts: args.paginationOpts },
+  components.agent.threads.listThreadsByUserId,
+  { userId, paginationOpts: args.paginationOpts },
 );
 ```
 
 ## Deleting all threads and messages associated with a user
 
 Asynchronously (from a mutation or action):
+
 ```ts
-await ctx.runMutation(
-    components.agent.users.deleteAllForUserIdAsync,
-    { userId },
-);
+await ctx.runMutation(components.agent.users.deleteAllForUserIdAsync, {
+  userId,
+});
 ```
 
 Synchronously (from an action):
+
 ```ts
 await ctx.runMutation(components.agent.users.deleteAllForUserId, { userId });
 ```
@@ -137,9 +145,9 @@ See [messages.md](./messages.md) for more details.
 import { listMessages } from "@convex-dev/agent";
 
 const messages = await listMessages(ctx, components.agent, {
-    threadId,
-    excludeToolMessages: true,
-    paginationOpts: { cursor: null, numItems: 10 } // null means start from the beginning
+  threadId,
+  excludeToolMessages: true,
+  paginationOpts: { cursor: null, numItems: 10 }, // null means start from the beginning
 });
 ```
 
@@ -151,6 +159,6 @@ you can create the thread more manually:
 ```ts
 const { _id: threadId } = await ctx.runMutation(
   components.agent.threads.createThread,
-  { userId, title, summary }
+  { userId, title, summary },
 );
 ```

@@ -5,10 +5,9 @@ sidebar_position: 1300
 description: "Tracking token usage of the Agent component"
 ---
 
-You can provide a `usageHandler` to the agent to track token usage.
-See an example in
-[this demo](../example/convex/usage_tracking/usageHandler.ts)
-that captures usage to a table, then scans it to generate per-user invoices.
+You can provide a `usageHandler` to the agent to track token usage. See an
+example in [this demo](../example/convex/usage_tracking/usageHandler.ts) that
+captures usage to a table, then scans it to generate per-user invoices.
 
 You can provide a `usageHandler` to the agent, per-thread, or per-message.
 
@@ -107,7 +106,7 @@ export const schema = defineSchema({
     status: v.union(
       v.literal("pending"),
       v.literal("paid"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
   }).index("billingPeriod_userId", ["billingPeriod", "userId"]),
   // ... other tables
@@ -135,7 +134,7 @@ crons.monthly(
   // Wait a day after the new month starts to generate invoices
   { day: 2, hourUTC: 0, minuteUTC: 0 },
   internal.usage.generateInvoices,
-  {}
+  {},
 );
 
 export default crons;

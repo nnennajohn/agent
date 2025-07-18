@@ -10,11 +10,13 @@ what's happening, but when that is insufficient, you have other options.
 
 ## Logging the raw request and response from LLM calls
 
-You can provide a `rawRequestResponseHandler` to the agent to log the raw request and response from the LLM.
+You can provide a `rawRequestResponseHandler` to the agent to log the raw
+request and response from the LLM.
 
-You could use this to log the request and response to a table, or use console logs with
-[Log Streaming](https://docs.convex.dev/production/integrations/log-streams/)
-to allow debugging and searching through Axiom or another logging service.
+You could use this to log the request and response to a table, or use console
+logs with
+[Log Streaming](https://docs.convex.dev/production/integrations/log-streams/) to
+allow debugging and searching through Axiom or another logging service.
 
 ```ts
 const supportAgent = new Agent(components.agent, {
@@ -47,9 +49,11 @@ the table list to see the Agent data. The organization of the tables matches the
 
 ### Circular dependencies
 
-Having the return value of workflows depend on other Convex functions can lead to circular dependencies due to the
-`internal.foo.bar` way of specifying functions. The way to fix this is to explicitly type the return value of the
-workflow. When in doubt, add return types to more `handler` functions, like this:
+Having the return value of workflows depend on other Convex functions can lead
+to circular dependencies due to the `internal.foo.bar` way of specifying
+functions. The way to fix this is to explicitly type the return value of the
+workflow. When in doubt, add return types to more `handler` functions, like
+this:
 
 ```diff
  export const supportAgentWorkflow = workflow.define({

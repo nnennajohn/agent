@@ -4,6 +4,7 @@ sidebar_label: "Playground"
 sidebar_position: 400
 description: "A simple way to test, debug, and develop with the agent"
 ---
+
 The Playground UI is a simple way to test, debug, and develop with the agent.
 
 ![Playground UI Screenshot](https://get-convex.github.io/agent/screenshot.png)
@@ -38,9 +39,7 @@ import { weatherAgent, fashionAgent } from "./example";
  * Here we expose the API so the frontend can access it.
  * Authorization is handled by passing up an apiKey that can be generated
  * on the dashboard or via CLI via:
- * ```
  * npx convex run --component agent apiKeys:issue
- * ```
  */
 export const {
   isApiKeyValid,
@@ -61,16 +60,17 @@ From in your project's repo, issue yourself an API key:
 ```sh
 npx convex run --component agent apiKeys:issue '{name:"..."}'
 ```
-Note: to generate multiple keys, give a different name to each key.
-To revoke and reissue a key, pass the same name.
+
+Note: to generate multiple keys, give a different name to each key. To revoke
+and reissue a key, pass the same name.
 
 Then visit the [hosted version](https://get-convex.github.io/agent/).
 
 It will ask for your Convex deployment URL, which can be found in `.env.local`.
-It will also ask for your API key that you generated above.
-If you used a different path for `convex/playground.ts` you can enter it.
-E.g. if you had `convex/foo/bar.ts` where you exported the playground API,
-you'd put in `foo/bar`.
+It will also ask for your API key that you generated above. If you used a
+different path for `convex/playground.ts` you can enter it. E.g. if you had
+`convex/foo/bar.ts` where you exported the playground API, you'd put in
+`foo/bar`.
 
 ## Running it locally
 

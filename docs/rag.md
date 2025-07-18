@@ -11,8 +11,8 @@ data to search for context.
 
 ## What is RAG?
 
-Retrieval-Augmented Generation (RAG) is a technique that allows an LLM to
-search through custom knowledge bases to answer questions.
+Retrieval-Augmented Generation (RAG) is a technique that allows an LLM to search
+through custom knowledge bases to answer questions.
 
 RAG combines the power of Large Language Models (LLMs) with knowledge retrieval.
 Instead of relying solely on the model's training data, RAG allows your AI to:
@@ -42,14 +42,19 @@ search. It breaks up the data into chunks and generates embeddings to use for
 vector search. See the [RAG component docs](https://convex.dev/components/rag)
 for details, but here are some key features:
 
-- **Namespaces:** Use namespaces for user-specific or team-specific data to isolate search domains.
+- **Namespaces:** Use namespaces for user-specific or team-specific data to
+  isolate search domains.
 - **Add Content**: Add or replace text content by key.
 - **Semantic Search**: Vector-based search using configurable embedding models
-- **Custom Filtering:** Define filters on each document for efficient vector search.
+- **Custom Filtering:** Define filters on each document for efficient vector
+  search.
 - **Chunk Context**: Get surrounding chunks for better context.
-- **Importance Weighting**: Weight content by providing a 0 to 1 "importance" to affect per-document vector search results.
-- **Chunking flexibility:** Bring your own document chunking, or use the default.
-- **Graceful Migrations**: Migrate content or whole namespaces without disruption.
+- **Importance Weighting**: Weight content by providing a 0 to 1 "importance" to
+  affect per-document vector search results.
+- **Chunking flexibility:** Bring your own document chunking, or use the
+  default.
+- **Graceful Migrations**: Migrate content or whole namespaces without
+  disruption.
 
 ## RAG Approaches
 
@@ -57,14 +62,17 @@ This directory contains two different approaches to implementing RAG:
 
 ### 1. Prompt-based RAG
 
-A straightforward implementation where the system automatically searches for relevant context for a user query.
+A straightforward implementation where the system automatically searches for
+relevant context for a user query.
 
-- The message history will only include the original user prompt and the response, not the context.
+- The message history will only include the original user prompt and the
+  response, not the context.
 - Looks up the context and injects it into the user's prompt.
-- Works well if you know the user's question will _always_ benefit from extra context.
+- Works well if you know the user's question will _always_ benefit from extra
+  context.
 
-For example code, see
-[ragAsPrompt.ts](../example/convex/rag/ragAsPrompt.ts) for the overall code. The simplest version is:
+For example code, see [ragAsPrompt.ts](../example/convex/rag/ragAsPrompt.ts) for
+the overall code. The simplest version is:
 
 ```ts
 const { thread } = await agent.continueThread(ctx, { threadId });
@@ -90,7 +98,8 @@ information by providing a tool to search for context.
 - The LLM can decide when to search for context or add new information.
 - This works well if you want the Agent to be able to dynamically search.
 
-See [ragAsTools.ts](../example/convex/rag/ragAsTools.ts) for the code. The simplest version is:
+See [ragAsTools.ts](../example/convex/rag/ragAsTools.ts) for the code. The
+simplest version is:
 
 ```ts
 searchContext: createTool({

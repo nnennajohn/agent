@@ -20,15 +20,15 @@ The message history will be provided by default as context. See
 [LLM Context](./context.md) for details on configuring the context provided.
 
 The arguments to `generateText` and others are the same as the AI SDK, except
-you don't have to provide a model. By default it will use the agent's chat model.
+you don't have to provide a model. By default it will use the agent's chat
+model.
 
 Note: `authorizeThreadAccess` referenced below is a function you would write to
 authenticate and authorize the user to access the thread. You can see an example
 implementation in [threads.ts](../example/convex/threads.ts).
 
-See [chat/basic.ts](../example/convex/chat/basic.ts)
-or [chat/streaming.ts](../example/convex/chat/streaming.ts)
-for live code examples.
+See [chat/basic.ts](../example/convex/chat/basic.ts) or
+[chat/streaming.ts](../example/convex/chat/streaming.ts) for live code examples.
 
 ### Basic approach (synchronous)
 
@@ -57,16 +57,16 @@ a few benefits:
   saved and present in your message query.
 - You can save the message in the same mutation (transaction) as other writes to
   the database. This message can the be used and re-used in an action with
-  retries, without duplicating the prompt message in the history.
-  See [workflows](./workflows.md) for more details.
+  retries, without duplicating the prompt message in the history. See
+  [workflows](./workflows.md) for more details.
 - Thanks to the transactional nature of mutations, the client can safely retry
   mutations for days until they run exactly once. Actions can transiently fail.
 
 Any clients listing the messages will automatically get the new messages as they
 are created asynchronously.
 
-To generate responses asynchronously, you need to first save the message, then pass the `messageId` as
-`promptMessageId` to generate / stream text.
+To generate responses asynchronously, you need to first save the message, then
+pass the `messageId` as `promptMessageId` to generate / stream text.
 
 ```ts
 import { components, internal } from "./_generated/api";
@@ -105,28 +105,27 @@ export const generateResponseAsync = internalAction({
 export const generateResponseAsync = agent.asTextAction();
 ```
 
-Note: when calling `agent.saveMessage`, embeddings are generated
-automatically when you save messages from an action and you have a text embedding
-model set.
+Note: when calling `agent.saveMessage`, embeddings are generated automatically
+when you save messages from an action and you have a text embedding model set.
 However, if you're saving messages in a mutation, where calling an LLM is not
 possible, it will generate them automatically when `generateText` receives a
 `promptMessageId` that lacks an embedding and you have a text embedding model
 configured. This is useful for workflows where you want to save messages in a
-mutation, but not generate them.
-In these cases, pass `skipEmbeddings: true` to `agent.saveMessage` to avoid the
-warning.
-If you're calling `saveMessage` directly, you need to provide the embedding
-yourself, so `skipEmbeddings` is not a parameter.
+mutation, but not generate them. In these cases, pass `skipEmbeddings: true` to
+`agent.saveMessage` to avoid the warning. If you're calling `saveMessage`
+directly, you need to provide the embedding yourself, so `skipEmbeddings` is not
+a parameter.
 
 ### Streaming
 
 Streaming follows the same pattern as the basic approach, but with a few
 differences, depending on the type of streaming you're doing.
 
-The easiest way to stream is to pass `{ saveStreamDeltas: true }` to `streamText`.
-This will save chunks of the response as deltas as they're generated, so all
-clients can subscribe to the stream and get live-updating text via normal
-Convex queries. See below for details on how to retrieve and display the stream.
+The easiest way to stream is to pass `{ saveStreamDeltas: true }` to
+`streamText`. This will save chunks of the response as deltas as they're
+generated, so all clients can subscribe to the stream and get live-updating text
+via normal Convex queries. See below for details on how to retrieve and display
+the stream.
 
 ```ts
 const { thread } = await storyAgent.continueThread(ctx, { threadId });
@@ -148,10 +147,12 @@ deltas to prevent excessive bandwidth usage. You can pass more options to
 - `chunking` can be "word", "line", a regex, or a custom function.
 - `throttleMs` is how frequently the deltas are saved. This will send multiple
   chunks per delta, writes sequentially, and will not write faster than the
-  throttleMs ([single-flighted](https://stack.convex.dev/throttling-requests-by-single-flighting) ).
+  throttleMs
+  ([single-flighted](https://stack.convex.dev/throttling-requests-by-single-flighting)
+  ).
 
-You can also consume the stream in all the ways you can with the underlying
-AI SDK - for instance iterating over the content, or using
+You can also consume the stream in all the ways you can with the underlying AI
+SDK - for instance iterating over the content, or using
 [`result.toDataStreamResponse()`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text#to-data-stream-response).
 
 ```ts
@@ -164,9 +165,9 @@ for await (const textPart of result.textStream) {
 
 ### Generating an object
 
-Similar to the AI SDK, you can generate or stream an object.
-The same arguments apply, except you don't have to provide a model.
-It will use the agent's default chat model.
+Similar to the AI SDK, you can generate or stream an object. The same arguments
+apply, except you don't have to provide a model. It will use the agent's default
+chat model.
 
 ```ts
 import { z } from "zod";
@@ -182,14 +183,13 @@ const result = await thread.generateObject({
 For streaming, it will save deltas to the database, so all clients querying for
 messages will get the stream.
 
-See [chat/basic.ts](../example/convex/chat/basic.ts)
-for the server-side code, and
-[chat/streaming.ts](../example/convex/chat/streaming.ts)
-for the streaming example.
+See [chat/basic.ts](../example/convex/chat/basic.ts) for the server-side code,
+and [chat/streaming.ts](../example/convex/chat/streaming.ts) for the streaming
+example.
 
-You have a function that both allows paginating over messages.
-To support streaming, you can also take in a `streamArgs` object and return the
-`streams` result from `syncStreams`.
+You have a function that both allows paginating over messages. To support
+streaming, you can also take in a `streamArgs` object and return the `streams`
+result from `syncStreams`.
 
 ```ts
 import { paginationOptsValidator } from "convex/server";
@@ -256,14 +256,14 @@ show the streaming text in a UI.
 
 ## Showing messages in React
 
-See [ChatStreaming.tsx](../example/ui/chat/ChatStreaming.tsx)
-for a streaming example, or [ChatBasic.tsx](../example/ui/chat/ChatBasic.tsx)
-for a non-streaming example.
+See [ChatStreaming.tsx](../example/ui/chat/ChatStreaming.tsx) for a streaming
+example, or [ChatBasic.tsx](../example/ui/chat/ChatBasic.tsx) for a
+non-streaming example.
 
 ### `useThreadMessages` hook
 
-The crux is to use the `useThreadMessages` hook.
-For streaming, pass in `stream: true` to the hook.
+The crux is to use the `useThreadMessages` hook. For streaming, pass in
+`stream: true` to the hook.
 
 ```tsx
 import { api } from "../convex/_generated/api";
@@ -273,7 +273,7 @@ function MyComponent({ threadId }: { threadId: string }) {
   const messages = useThreadMessages(
     api.chat.streaming.listMessages,
     { threadId },
-    { initialNumItems: 10, stream: true }
+    { initialNumItems: 10, stream: true },
   );
   return (
     <div>
@@ -294,7 +294,8 @@ import { toUIMessages, type UIMessage } from "@convex-dev/agent/react";
 `toUIMessages` is a helper function that transforms messages into AI SDK
 "UIMessage"s. This is a convenient data model for displaying messages:
 
-- `parts` is an array of parts (e.g. "text", "file", "image", "toolCall", "toolResult")
+- `parts` is an array of parts (e.g. "text", "file", "image", "toolCall",
+  "toolResult")
 - `content` is a string of the message content.
 - `role` is the role of the message (e.g. "user", "assistant", "system").
 
@@ -306,7 +307,8 @@ The helper also adds some additional fields:
 - `status` is the status of the message (or "streaming").
 - `agentName` is the name of the agent that generated the message.
 
-To reference these, ensure you're importing `UIMessage` from `@convex-dev/agent/react`.
+To reference these, ensure you're importing `UIMessage` from
+`@convex-dev/agent/react`.
 
 ### Text smoothing with the `useSmoothText` hook
 
@@ -349,9 +351,9 @@ ephemeral message at the top of the list.
 
 ```ts
 const sendMessage = useMutation(
-  api.streaming.streamStoryAsynchronously
+  api.streaming.streamStoryAsynchronously,
 ).withOptimisticUpdate(
-  optimisticallySendMessage(api.streaming.listThreadMessages)
+  optimisticallySendMessage(api.streaming.listThreadMessages),
 );
 ```
 
@@ -383,7 +385,10 @@ You can save messages to the database manually using `saveMessage` or
 
 ```ts
 const { messageId } = await agent.saveMessage(ctx, {
-  threadId, userId, prompt, metadata
+  threadId,
+  userId,
+  prompt,
+  metadata,
 });
 ```
 
@@ -398,9 +403,9 @@ const { lastMessageId, messageIds} = await agent.saveMessages(ctx, {
 ```
 
 If you are saving the message in a mutation and you have a text embedding model
-set, pass `skipEmbeddings: true`. The embeddings for the message will be generated
-lazily if the message is used as a prompt. Or you can provide an embedding
-upfront if it's available, or later explicitly generate them using
+set, pass `skipEmbeddings: true`. The embeddings for the message will be
+generated lazily if the message is used as a prompt. Or you can provide an
+embedding upfront if it's available, or later explicitly generate them using
 `agent.generateEmbeddings`.
 
 The `metadata` argument is optional and allows you to provide more details, such
@@ -409,14 +414,15 @@ as `sources`, `reasoningDetails`, `usage`, `warnings`, `error`, etc.
 ## Configuring the storage of messages
 
 Generally the defaults are fine, but if you want to pass in multiple messages
-and have them all saved (vs. just the last one), or avoid saving any input
-or output messages, you can pass in a `storageOptions` object, either to the
-Agent constructor or per-message.
+and have them all saved (vs. just the last one), or avoid saving any input or
+output messages, you can pass in a `storageOptions` object, either to the Agent
+constructor or per-message.
 
 The use-case for passing in multiple messages but not saving them is if you want
 to include some extra messages for context to the LLM, but only the last message
-is the user's actual request. e.g. `messages = [...messagesFromRag, messageFromUser]`.
-The default is to save the prompt and all output messages.
+is the user's actual request. e.g.
+`messages = [...messagesFromRag, messageFromUser]`. The default is to save the
+prompt and all output messages.
 
 ```ts
 const result = await thread.generateText({ messages }, {
@@ -488,7 +494,8 @@ import { ... } from "@convex-dev/agent";
   `DataContent` or `URL` to a Convex-serializable format.
 - `filterOutOrphanedToolMessages` is a utility function that filters out tool
   call messages that don't have a corresponding tool result message.
-- `extractText` is a utility function that extracts text from a `CoreMessage`-like object.
+- `extractText` is a utility function that extracts text from a
+  `CoreMessage`-like object.
 
 ### Validators and types
 
@@ -498,9 +505,13 @@ There are types to validate and provide types for various values
 import { ... } from "@convex-dev/agent";
 ```
 
-- `vMessage` is a validator for a `CoreMessage`-like object (with a `role` and `content` field e.g.).
-- `MessageDoc` and `vMessageDoc` are the types for a message (which includes a `.message` field with the `vMessage` type).
-- `Thread` is the type of a thread returned from `continueThread` or `createThread`.
+- `vMessage` is a validator for a `CoreMessage`-like object (with a `role` and
+  `content` field e.g.).
+- `MessageDoc` and `vMessageDoc` are the types for a message (which includes a
+  `.message` field with the `vMessage` type).
+- `Thread` is the type of a thread returned from `continueThread` or
+  `createThread`.
 - `ThreadDoc` and `vThreadDoc` are the types for thread metadata.
-- `AgentComponent` is the type of the installed component (e.g. `components.agent`).
+- `AgentComponent` is the type of the installed component (e.g.
+  `components.agent`).
 - `ToolCtx` is the `ctx` type for calls to `createTool` tools.

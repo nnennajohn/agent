@@ -5,15 +5,17 @@ sidebar_position: 1200
 description: "Control the rate of requests to your AI agent"
 ---
 
-Rate limiting is a way to control the rate of requests to your AI agent, preventing abuse and managing API budgets.
+Rate limiting is a way to control the rate of requests to your AI agent,
+preventing abuse and managing API budgets.
 
-To demonstrate using the [Rate Limiter component](https://www.convex.dev/components/rate-limiter),
-there is an example implementation you can run yourself.
+To demonstrate using the
+[Rate Limiter component](https://www.convex.dev/components/rate-limiter), there
+is an example implementation you can run yourself.
 
-It rate limits the number of messages a user can send in a given time period,
-as well as the total token usage for a user. When a limit is exceeded, the
-client can reactively tell the user how long to wait (even if they exceeded the
-limit in another browser tab!).
+It rate limits the number of messages a user can send in a given time period, as
+well as the total token usage for a user. When a limit is exceeded, the client
+can reactively tell the user how long to wait (even if they exceeded the limit
+in another browser tab!).
 
 For general usage tracking, see [Usage Tracking](./usage-tracking.md).
 
@@ -21,7 +23,8 @@ For general usage tracking, see [Usage Tracking](./usage-tracking.md).
 
 The rate limiting example demonstrates two types of rate limiting:
 
-1. **Message Rate Limiting**: Prevents users from sending messages too frequently
+1. **Message Rate Limiting**: Prevents users from sending messages too
+   frequently
 2. **Token Usage Rate Limiting**: Controls AI model token consumption over time
 
 ## Running the Example
@@ -38,7 +41,8 @@ Try sending multiple questions quickly to see the rate limiting in action!
 ## Rate Limiting Strategy
 
 Below we'll go through each configuration. You can also see the full example
-implementation in [rateLimiting.ts](../example/convex/rate_limiting/rateLimiting.ts).
+implementation in
+[rateLimiting.ts](../example/convex/rate_limiting/rateLimiting.ts).
 
 ```ts
 import { MINUTE, RateLimiter, SECOND } from "@convex-dev/rate-limiter";
@@ -71,8 +75,8 @@ sendMessage: { kind: "fixed window", period: 5 * SECOND, rate: 1, capacity: 2 }
 
 - Allows 1 message every 5 seconds per user.
 - Prevents spam and rapid-fire requests.
-- Allows up to a 2 message burst to be sent within 5 seconds via `capacity`,
-  if they had usage leftover from the previous 5 seconds.
+- Allows up to a 2 message burst to be sent within 5 seconds via `capacity`, if
+  they had usage leftover from the previous 5 seconds.
 
 Global limit:
 
@@ -143,9 +147,9 @@ If there is not enough allowance, the rate limiter will throw an error that the
 client can catch and prompt the user to wait a bit before trying again.
 
 The difference between `limit` and `check` is that `limit` will consume the
-tokens immediately, while `check` will only check if the limit would be exceeded.
-We actually mark the tokens as used once the request is complete with the total
-usage.
+tokens immediately, while `check` will only check if the limit would be
+exceeded. We actually mark the tokens as used once the request is complete with
+the total usage.
 
 ### Step 2: Post-generation Usage Tracking
 
@@ -170,9 +174,9 @@ await rateLimiter.limit(ctx, "tokenUsage", {
 });
 ```
 
-The "trick" here is that, while a user can make a request that exceeds the
-limit for a single request, they then have to wait longer to accrue the tokens
-for another request. So averaged over time they can't consume more than the rate
+The "trick" here is that, while a user can make a request that exceeds the limit
+for a single request, they then have to wait longer to accrue the tokens for
+another request. So averaged over time they can't consume more than the rate
 limit.
 
 This balances pragmatism of trying to prevent requests ahead of time with an
@@ -202,7 +206,7 @@ In `convex/example.ts` we expose `getRateLimit`:
 ```ts
 export const { getRateLimit, getServerTime } = rateLimiter.hookAPI<DataModel>(
   "sendMessage",
-  { key: (ctx) => getAuthUserId(ctx) }
+  { key: (ctx) => getAuthUserId(ctx) },
 );
 ```
 
@@ -250,7 +254,7 @@ import { components } from "./_generated/api";
 export async function estimateTokens(
   ctx: QueryCtx,
   threadId: string | undefined,
-  question: string
+  question: string,
 ) {
   // Assume roughly 4 characters per token
   const promptTokens = question.length / 4;

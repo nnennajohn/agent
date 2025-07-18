@@ -36,14 +36,14 @@ export const getAdvice = action({
     await weatherAgent.generateText(
       ctx,
       { threadId },
-      { prompt: `What is the weather in ${location}?` }
+      { prompt: `What is the weather in ${location}?` },
     );
     // This includes previous message history from the thread automatically and
     // uses tool calls to get user-specific fashion advice.
     await fashionAgent.generateText(
       ctx,
       { threadId },
-      { prompt: `What should I wear based on the weather?` }
+      { prompt: `What should I wear based on the weather?` },
     );
     // We don't need to return anything, since the messages are saved
     // automatically and clients will get the response via subscriptions.
@@ -54,9 +54,9 @@ export const getAdvice = action({
 ## Using the Workflow component for long-lived durable workflows
 
 The [Workflow component](https://convex.dev/components/workflow) is a great way
-to build long-lived, durable workflows.
-It handles retries and guarantees of eventually completing, surviving server
-restarts, and more. Read more about durable workflows in
+to build long-lived, durable workflows. It handles retries and guarantees of
+eventually completing, surviving server restarts, and more. Read more about
+durable workflows in
 [this Stack post](https://stack.convex.dev/durable-workflows-and-strong-guarantees).
 
 To use the agent alongside workflows, you can run individual idempotent steps
@@ -102,14 +102,14 @@ To save messages explicitly as a mutation, similar to `agent.saveMessages`:
 export const saveMessages = supportAgent.asSaveMessagesMutation();
 ```
 
-This is useful for idempotency, as you can first create the user's message,
-then generate a response in an unreliable action with retries, passing in the
+This is useful for idempotency, as you can first create the user's message, then
+generate a response in an unreliable action with retries, passing in the
 existing messageId instead of a prompt.
 
 ### Using the agent actions within a workflow
 
-You can use the [Workflow component](https://convex.dev/components/workflow)
-to run agent flows. It handles retries and guarantees of eventually completing,
+You can use the [Workflow component](https://convex.dev/components/workflow) to
+run agent flows. It handles retries and guarantees of eventually completing,
 surviving server restarts, and more. Read more about durable workflows
 [in this Stack post](https://stack.convex.dev/durable-workflows-and-strong-guarantees).
 
@@ -133,7 +133,7 @@ export const supportAgentWorkflow = workflow.define({
       {
         userId,
         message: suggestion,
-      }
+      },
     );
     await step.runMutation(internal.example.sendUserMessage, {
       userId,
@@ -143,12 +143,13 @@ export const supportAgentWorkflow = workflow.define({
 });
 ```
 
-See the code in [workflows/chaining.ts](../example/convex/workflows/chaining.ts).
+See the code in
+[workflows/chaining.ts](../example/convex/workflows/chaining.ts).
 
 ## Complex workflow patterns
 
-While there is only an example of a simple workflow here, there are many
-complex patterns that can be built with the Agent component:
+While there is only an example of a simple workflow here, there are many complex
+patterns that can be built with the Agent component:
 
 - Dynamic routing to agents based on an LLM call or vector search
 - Fanning out to LLM calls, then combining the results
