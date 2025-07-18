@@ -123,7 +123,7 @@ yourself, so `skipEmbeddings` is not a parameter.
 Streaming follows the same pattern as the basic approach, but with a few
 differences, depending on the type of streaming you're doing.
 
-The easiest way to stream is to pass { saveStreamDeltas: true } to `streamText`.
+The easiest way to stream is to pass `{ saveStreamDeltas: true }` to `streamText`.
 This will save chunks of the response as deltas as they're generated, so all
 clients can subscribe to the stream and get live-updating text via normal
 Convex queries. See below for details on how to retrieve and display the stream.
