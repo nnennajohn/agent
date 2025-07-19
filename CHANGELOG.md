@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.1.15 alpha
+## 0.1.15
 
 - Agents can be dynamically created for the playground
-- You can abort streaming messages
+- You can abort streaming messages by ID or message `order`
 - You can request that `syncStreams` return aborted streamed messages,
   if you want to show those in your UI.
 - They will have `msg.streaming === false` if they were aborted.
@@ -12,6 +12,7 @@
   `listMessages`, `syncStreams`
 - Improved the `ctx` type for the raw request handler and exposed more types
 - Add `agentName` to `UIMessage`
+- Saving messages returns the `order` of the last message saved.
 - Fix: stream deletion is idempotent and cleanup is canceled if it's already deleted.
 
 ## 0.1.14
