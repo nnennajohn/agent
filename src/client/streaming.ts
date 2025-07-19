@@ -17,6 +17,7 @@ import type {
   RunQueryCtx,
   SyncStreamsReturnValue,
 } from "./types.js";
+import { omit } from "convex-helpers";
 
 /**
  * A function that handles fetching stream deltas, used with the React hooks
@@ -137,7 +138,6 @@ export class DeltaStreamer {
             ...DEFAULT_STREAMING_OPTIONS,
             ...options,
           };
-    this.metadata = metadata;
     this.#nextParts = [];
     this.#nextOrder = metadata.order ?? 0;
     this.#nextStepOrder = (metadata.stepOrder ?? 0) + 1;
@@ -162,7 +162,7 @@ export class DeltaStreamer {
       this.streamId = await this.ctx.runMutation(
         this.component.streams.create,
         {
-          ...this.metadata,
+          ...omit(this.metadata, ["abortSignal"]),
           order: this.#nextOrder,
           stepOrder: this.#nextStepOrder,
         }
