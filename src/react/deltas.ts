@@ -2,6 +2,7 @@ import type { TextPart, ToolCallPart, ToolResultPart } from "ai";
 import type { MessageDoc } from "../client/index.js";
 import type {
   Message,
+  MessageStatus,
   StreamDelta,
   StreamMessage,
   TextStreamPart,
@@ -99,6 +100,12 @@ export function applyDeltasToStreamMessage(
     cursor = delta.end;
     parts.push(...delta.parts);
   }
+  if (existing && existing.messages.length > 0 && !changed) {
+    const lastMessage = existing.messages.at(-1)!;
+    if (statusFromStreamStatus(streamMessage.status) !== lastMessage.status) {
+      changed = true;
+    }
+  }
   if (!changed) {
     return [
       existing ?? { streamId: streamMessage.streamId, cursor, messages: [] },
@@ -115,6 +122,7 @@ export function applyDeltasToStreamMessage(
     currentMessage = {
       ...lastMessage,
       message: cloneMessageAndContent(lastMessage.message),
+      status: statusFromStreamStatus(streamMessage.status),
     };
   } else {
     const newMessage = createStreamingMessage(
@@ -248,6 +256,21 @@ function getLastContent(message: MessageDoc) {
   return undefined;
 }
 
+function statusFromStreamStatus(
+  status: StreamMessage["status"]
+): MessageStatus {
+  switch (status) {
+    case "streaming":
+      return "pending";
+    case "finished":
+      return "success";
+    case "aborted":
+      return "failed";
+    default:
+      return "pending";
+  }
+}
+
 export function createStreamingMessage(
   threadId: string,
   message: StreamMessage,
@@ -256,12 +279,12 @@ export function createStreamingMessage(
 ): MessageDoc {
   const { streamId, ...rest } = message;
   const metadata: MessageDoc = {
+    ...rest,
     _id: `${streamId}-${index}`,
     _creationTime: Date.now(),
-    status: "pending",
+    status: statusFromStreamStatus(message.status),
     threadId,
     tool: false,
-    ...rest,
   };
   switch (part.type) {
     case "text-delta":

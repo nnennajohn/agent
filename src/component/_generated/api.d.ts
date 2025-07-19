@@ -900,13 +900,13 @@ export type Mounts = {
       "public",
       {
         beforeMessageId?: string;
+        embedding?: Array<number>;
+        embeddingModel?: string;
         limit: number;
         messageRange?: { after: number; before: number };
         searchAllMessagesForUserId?: string;
         text?: string;
         threadId?: string;
-        vector?: Array<number>;
-        vectorModel?: string;
         vectorScoreThreshold?: number;
       },
       Array<{
@@ -1433,6 +1433,18 @@ export type Mounts = {
     >;
   };
   streams: {
+    abort: FunctionReference<
+      "mutation",
+      "public",
+      { reason: string; streamId: string },
+      boolean
+    >;
+    abortByOrder: FunctionReference<
+      "mutation",
+      "public",
+      { order: number; reason: string; threadId: string },
+      boolean
+    >;
     addDelta: FunctionReference<
       "mutation",
       "public",
@@ -1588,13 +1600,18 @@ export type Mounts = {
     list: FunctionReference<
       "query",
       "public",
-      { threadId: string },
+      {
+        startOrder?: number;
+        statuses?: Array<"streaming" | "finished" | "aborted">;
+        threadId: string;
+      },
       Array<{
         agentName?: string;
         model?: string;
         order: number;
         provider?: string;
         providerOptions?: Record<string, Record<string, any>>;
+        status: "streaming" | "finished" | "aborted";
         stepOrder: number;
         streamId: string;
         userId?: string;

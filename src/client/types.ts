@@ -78,6 +78,10 @@ export type ContextOptions = {
      */
     vectorSearch?: boolean;
     /**
+     * The score threshold for vector search. Default is 0.0.
+     */
+    vectorScoreThreshold?: number;
+    /**
      * What messages around the search results to include.
      * Default: { before: 2, after: 1 }
      * (two before, and one after each message found in the search)
@@ -127,7 +131,7 @@ export type StorageOptions = {
   saveOutputMessages?: boolean;
 };
 
-export type GenerationOutputMetadata = { messageId?: string };
+export type GenerationOutputMetadata = { messageId?: string; order?: number };
 
 export type UsageHandler = (
   ctx: RunActionCtx,
@@ -144,7 +148,7 @@ export type UsageHandler = (
 ) => void | Promise<void>;
 
 export type RawRequestResponseHandler = (
-  ctx: RunActionCtx,
+  ctx: ActionCtx,
   args: {
     userId: string | undefined;
     threadId: string | undefined;
@@ -329,9 +333,7 @@ export type OurStreamObjectArgs<T> = StreamObjectArgs<T> &
     "onError" | "onFinish" | "abortSignal"
   >;
 
-type ThreadOutputMetadata = GenerationOutputMetadata & {
-  messageId: string;
-};
+type ThreadOutputMetadata = Required<GenerationOutputMetadata>;
 
 /**
  * The interface for a thread returned from {@link createThread} or {@link continueThread}.

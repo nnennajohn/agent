@@ -1,5 +1,6 @@
 import type { EmbeddingModelV1, LanguageModelV1 } from "@ai-sdk/provider";
 import type {
+  AssistantContent,
   CoreMessage,
   DeepPartial,
   FilePart,
@@ -10,6 +11,7 @@ import type {
   StreamObjectResult,
   StreamTextResult,
   ToolSet,
+  UserContent,
 } from "ai";
 import { generateObject, generateText, streamObject, streamText } from "ai";
 import { assert } from "convex-helpers";
@@ -22,6 +24,7 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import type { MessageDoc, ThreadDoc } from "../component/schema.js";
+import type { threadFieldsSupportingPatch } from "../component/threads.js";
 import {
   validateVectorDimension,
   type VectorDimension,
@@ -34,17 +37,12 @@ import {
   serializeNewMessagesInStep,
   serializeObjectResult,
 } from "../mapping.js";
+import { extractText, isTool } from "../shared.js";
 import {
-  DEFAULT_MESSAGE_RANGE,
-  DEFAULT_RECENT_MESSAGES,
-  extractText,
-  isTool,
-} from "../shared.js";
-import {
-  type MessageWithMetadata,
+  type MessageEmbeddings,
   type MessageStatus,
+  type MessageWithMetadata,
   type ProviderMetadata,
-  type SearchOptions,
   type StreamArgs,
   type Usage,
   vMessageWithMetadata,
@@ -52,12 +50,16 @@ import {
   vTextArgs,
 } from "../validators.js";
 import { createTool, wrapTools } from "./createTool.js";
+import { listMessages } from "./listMessages.js";
+import { fetchContextMessages } from "./search.js";
 import {
   DeltaStreamer,
   mergeTransforms,
   type StreamingOptions,
+  syncStreams,
 } from "./streaming.js";
 import type {
+  ActionCtx,
   AgentComponent,
   ContextOptions,
   GenerationOutputMetadata,
@@ -68,7 +70,6 @@ import type {
   RunActionCtx,
   RunMutationCtx,
   RunQueryCtx,
-  ActionCtx,
   StorageOptions,
   StreamingTextArgs,
   SyncStreamsReturnValue,
@@ -76,11 +77,9 @@ import type {
   Thread,
   UsageHandler,
 } from "./types.js";
-import type { threadFieldsSupportingPatch } from "../component/threads.js";
 
-export { storeFile, getFile } from "./files.js";
-export { serializeDataOrUrl } from "../mapping.js";
 export { vMessageDoc, vThreadDoc } from "../component/schema.js";
+export { serializeDataOrUrl } from "../mapping.js";
 export {
   vAssistantMessage,
   vContextOptions,
@@ -95,12 +94,23 @@ export {
   vUserMessage,
 } from "../validators.js";
 export type { ToolCtx } from "./createTool.js";
-export { createTool, extractText, isTool };
+export { getFile, storeFile } from "./files.js";
+export { filterOutOrphanedToolMessages } from "./search.js";
+export { abortStream, listStreams } from "./streaming.js";
+export {
+  createTool,
+  extractText,
+  fetchContextMessages,
+  isTool,
+  listMessages,
+  syncStreams,
+};
 export type {
   AgentComponent,
   ContextOptions,
   MessageDoc,
   ProviderMetadata,
+  RawRequestResponseHandler,
   StorageOptions,
   StreamArgs,
   SyncStreamsReturnValue,
@@ -110,7 +120,7 @@ export type {
   UsageHandler,
 };
 
-export class Agent<AgentTools extends ToolSet> {
+export class Agent<AgentTools extends ToolSet = ToolSet> {
   constructor(
     public component: AgentComponent,
     public options: {
@@ -276,25 +286,18 @@ export class Agent<AgentTools extends ToolSet> {
     threadId: string;
     thread?: Thread<ThreadTools extends undefined ? AgentTools : ThreadTools>;
   }> {
-    const threadDoc = await ctx.runMutation(
-      this.component.threads.createThread,
-      {
-        userId: args?.userId,
-        title: args?.title,
-        summary: args?.summary,
-      }
-    );
+    const threadId = await createThread(ctx, this.component, args);
     if (!("runAction" in ctx)) {
-      return { threadId: threadDoc._id };
+      return { threadId };
     }
     const { thread } = await this.continueThread(ctx, {
-      threadId: threadDoc._id,
+      threadId,
       userId: args?.userId,
       usageHandler: args?.usageHandler,
       tools: args?.tools,
     });
     return {
-      threadId: threadDoc._id,
+      threadId,
       thread,
     };
   }
@@ -421,7 +424,7 @@ export class Agent<AgentTools extends ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const toolCtx = { ...ctx, userId, threadId, messageId, agent: this };
     const tools = wrapTools(
       toolCtx,
@@ -476,6 +479,7 @@ export class Agent<AgentTools extends ToolSet> {
       > &
         GenerationOutputMetadata;
       result.messageId = messageId;
+      result.order = order;
       return result;
     } catch (error) {
       if (threadId && messageId) {
@@ -598,6 +602,7 @@ export class Agent<AgentTools extends ToolSet> {
             error: (error.error as Error).message,
           });
         }
+        // TODO: update the streamer to error state
         return args.onError?.(error);
       },
       onStepFinish: async (step) => {
@@ -611,7 +616,6 @@ export class Agent<AgentTools extends ToolSet> {
             promptMessageId: messageId,
             step,
           });
-          // TODO: figure out pending/not
           await streamer?.finish(saved.messages);
         }
         if (this.options.rawRequestResponseHandler) {
@@ -642,6 +646,7 @@ export class Agent<AgentTools extends ToolSet> {
     > &
       GenerationOutputMetadata;
     result.messageId = messageId;
+    result.order = order;
     return result;
   }
 
@@ -674,7 +679,7 @@ export class Agent<AgentTools extends ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const trackUsage = usageHandler ?? this.options.usageHandler;
     const saveOutputMessages = this._shouldSaveOutputMessages(
       options?.storageOptions
@@ -696,6 +701,7 @@ export class Agent<AgentTools extends ToolSet> {
         });
       }
       result.messageId = messageId;
+      result.order = order;
       if (this.options.rawRequestResponseHandler) {
         await this.options.rawRequestResponseHandler(ctx, {
           userId,
@@ -760,7 +766,7 @@ export class Agent<AgentTools extends ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const trackUsage = usageHandler ?? this.options.usageHandler;
     const saveOutputMessages = this._shouldSaveOutputMessages(
       options?.storageOptions
@@ -821,6 +827,7 @@ export class Agent<AgentTools extends ToolSet> {
     }) as StreamObjectResult<DeepPartial<T>, T, never> &
       GenerationOutputMetadata;
     stream.messageId = messageId;
+    stream.order = order;
     return stream;
   }
 
@@ -833,14 +840,7 @@ export class Agent<AgentTools extends ToolSet> {
    */
   async saveMessage(
     ctx: RunMutationCtx,
-    args: {
-      threadId: string;
-      userId?: string;
-      /**
-       * Metadata to save with the messages. Each element corresponds to the
-       * message at the same index.
-       */
-      metadata?: Omit<MessageWithMetadata, "message">;
+    args: SaveMessageArgs & {
       /**
        * If true, it will not generate embeddings for the message.
        * Useful if you're saving messages in a mutation where you can't run `fetch`.
@@ -848,26 +848,17 @@ export class Agent<AgentTools extends ToolSet> {
        * action later that calls `agent.generateAndSaveEmbeddings`.
        */
       skipEmbeddings?: boolean;
-    } & (
-      | {
-          prompt?: undefined;
-          /**
-           * The message to save.
-           */
-          message: CoreMessage;
-        }
-      | {
-          /*
-           * The prompt to save with the message.
-           */
-          prompt: string;
-          message?: undefined;
-        }
-    )
+    }
   ) {
     const { lastMessageId, messages } = await this.saveMessages(ctx, {
       threadId: args.threadId,
       userId: args.userId,
+      embeddings: args.embedding
+        ? {
+            model: args.embedding.model,
+            vectors: [args.embedding.vector],
+          }
+        : undefined,
       messages:
         args.prompt !== undefined
           ? [{ role: "user", content: args.prompt }]
@@ -880,40 +871,15 @@ export class Agent<AgentTools extends ToolSet> {
 
   /**
    * Explicitly save messages associated with the thread (& user if provided)
+   * If you have an embedding model set, it will also generate embeddings for
+   * the messages.
    * @param ctx The ctx parameter to a mutation or action.
    * @param args The messages and context to save
    * @returns
    */
   async saveMessages(
     ctx: RunMutationCtx | RunActionCtx,
-    args: {
-      threadId: string;
-      userId?: string;
-      /**
-       * The message that these messages are in response to. They will be
-       * the same "order" as this message, at increasing stepOrder(s).
-       */
-      promptMessageId?: string;
-      /**
-       * The messages to save.
-       */
-      messages: CoreMessageMaybeWithId[];
-      /**
-       * Metadata to save with the messages. Each element corresponds to the
-       * message at the same index.
-       */
-      metadata?: Omit<MessageWithMetadata, "message">[];
-      /**
-       * If false, it will "commit" the messages immediately.
-       * If true, it will mark them as pending until the final step has finished.
-       * Defaults to false.
-       */
-      pending?: boolean;
-      /**
-       * If true, it will fail any pending steps.
-       * Defaults to false.
-       */
-      failPendingSteps?: boolean;
+    args: SaveMessagesArgs & {
       /**
        * Skip generating embeddings for the messages. Useful if you're
        * saving messages in a mutation where you can't run `fetch`.
@@ -929,13 +895,15 @@ export class Agent<AgentTools extends ToolSet> {
     let embeddings:
       | {
           vectors: (number[] | null)[];
-          dimension: VectorDimension;
           model: string;
         }
       | undefined;
-    if (args.skipEmbeddings || !("runAction" in ctx)) {
+    const { skipEmbeddings, ...rest } = args;
+    if (args.embeddings) {
+      embeddings = args.embeddings;
+    } else if (skipEmbeddings || !("runAction" in ctx)) {
       embeddings = undefined;
-      if (!args.skipEmbeddings && this.options.textEmbedding) {
+      if (!skipEmbeddings && this.options.textEmbedding) {
         console.warn(
           "You're trying to save messages and generate embeddings, but you're in a mutation. " +
             "Pass `skipEmbeddings: true` to skip generating embeddings in the mutation and skip this warning. " +
@@ -953,33 +921,11 @@ export class Agent<AgentTools extends ToolSet> {
         args.messages
       );
     }
-    const result = await ctx.runMutation(this.component.messages.addMessages, {
-      threadId: args.threadId,
-      userId: args.userId,
+    return saveMessages(ctx, this.component, {
+      ...rest,
       agentName: this.options.name,
-      promptMessageId: args.promptMessageId,
       embeddings,
-      messages: await Promise.all(
-        args.messages.map(async (m, i) => {
-          const { message, fileIds } = await serializeMessage(
-            ctx,
-            this.component,
-            m
-          );
-          return {
-            ...args.metadata?.[i],
-            message,
-            fileIds,
-          } as MessageWithMetadata;
-        })
-      ),
-      failPendingSteps: args.failPendingSteps ?? false,
-      pending: args.pending ?? false,
     });
-    return {
-      lastMessageId: result.messages.at(-1)!._id,
-      messages: result.messages,
-    };
   }
 
   /**
@@ -1001,17 +947,7 @@ export class Agent<AgentTools extends ToolSet> {
       statuses?: MessageStatus[];
     }
   ): Promise<PaginationResult<MessageDoc>> {
-    if (args.paginationOpts.numItems === 0) {
-      return {
-        page: [],
-        isDone: true,
-        continueCursor: args.paginationOpts.cursor ?? "",
-      };
-    }
-    return ctx.runQuery(this.component.messages.listMessagesByThreadId, {
-      order: "desc",
-      ...args,
-    });
+    return listMessages(ctx, this.component, args);
   }
 
   /**
@@ -1027,25 +963,11 @@ export class Agent<AgentTools extends ToolSet> {
     args: {
       threadId: string;
       streamArgs: StreamArgs | undefined;
+      // By default, only streaming messages are included.
+      includeStatuses?: ("streaming" | "finished" | "aborted")[];
     }
   ): Promise<SyncStreamsReturnValue | undefined> {
-    if (!args.streamArgs) return undefined;
-    if (args.streamArgs.kind === "list") {
-      return {
-        kind: "list",
-        messages: await ctx.runQuery(this.component.streams.list, {
-          threadId: args.threadId,
-        }),
-      };
-    } else {
-      return {
-        kind: "deltas",
-        deltas: await ctx.runQuery(this.component.streams.listDeltas, {
-          threadId: args.threadId,
-          cursors: args.streamArgs.cursors,
-        }),
-      };
-    }
+    return syncStreams(ctx, this.component, args);
   }
 
   /**
@@ -1072,76 +994,28 @@ export class Agent<AgentTools extends ToolSet> {
     }
   ): Promise<MessageDoc[]> {
     assert(args.userId || args.threadId, "Specify userId or threadId");
-    // Fetch the latest messages from the thread
-    let included: Set<string> | undefined;
     const opts = this._mergedContextOptions(args.contextOptions);
-    const contextMessages: MessageDoc[] = [];
-    if (
-      args.threadId &&
-      (opts.recentMessages !== 0 || args.upToAndIncludingMessageId)
-    ) {
-      const { page } = await ctx.runQuery(
-        this.component.messages.listMessagesByThreadId,
-        {
-          threadId: args.threadId,
-          excludeToolMessages: opts.excludeToolMessages,
-          paginationOpts: {
-            numItems: opts.recentMessages ?? DEFAULT_RECENT_MESSAGES,
-            cursor: null,
-          },
-          upToAndIncludingMessageId: args.upToAndIncludingMessageId,
-          order: "desc",
-          statuses: ["success"],
-        }
-      );
-      included = new Set(page.map((m) => m._id));
-      contextMessages.push(
-        // Reverse since we fetched in descending order
-        ...page.reverse()
-      );
-    }
-    if (opts.searchOptions?.textSearch || opts.searchOptions?.vectorSearch) {
-      const targetMessage = contextMessages.find(
-        (m) => m._id === args.upToAndIncludingMessageId
-      )?.message;
-      const messagesToSearch = targetMessage ? [targetMessage] : args.messages;
-      if (!("runAction" in ctx)) {
-        throw new Error("searchUserMessages only works in an action");
-      }
-      const searchMessages = await ctx.runAction(
-        this.component.messages.searchMessages,
-        {
-          searchAllMessagesForUserId: opts?.searchOtherThreads
-            ? args.userId ??
-              (args.threadId &&
-                (
-                  await ctx.runQuery(this.component.threads.getThread, {
-                    threadId: args.threadId,
-                  })
-                )?.userId)
-            : undefined,
-          threadId: args.threadId,
-          beforeMessageId: args.upToAndIncludingMessageId,
-          ...(await this._searchOptionsWithEmbeddingAndDefaults(
-            ctx,
-            { userId: args.userId, threadId: args.threadId },
-            opts,
-            messagesToSearch
-          )),
-        }
-      );
-      // TODO: track what messages we used for context
-      contextMessages.unshift(
-        ...searchMessages.filter((m) => !included?.has(m._id))
-      );
-    }
-    // Ensure we don't include tool messages without a corresponding tool call
-    return filterOutOrphanedToolMessages(
-      contextMessages.sort((a, b) =>
-        // Sort the raw MessageDocs by order and stepOrder
-        a.order === b.order ? a.stepOrder - b.stepOrder : a.order - b.order
-      )
-    );
+    return fetchContextMessages(ctx, this.component, {
+      ...args,
+      contextOptions: opts,
+      getEmbedding: async (text) => {
+        assert("runAction" in ctx);
+        assert(
+          this.options.textEmbedding,
+          "A textEmbedding model is required to be set on the Agent that you're doing vector search with"
+        );
+        return {
+          vector: (
+            await this.doEmbed(ctx, {
+              userId: args.userId,
+              threadId: args.threadId,
+              values: [text],
+            })
+          ).embeddings[0],
+          vectorModel: this.options.textEmbedding.modelId,
+        };
+      },
+    });
   }
 
   /**
@@ -1154,13 +1028,7 @@ export class Agent<AgentTools extends ToolSet> {
     ctx: RunQueryCtx,
     args: { threadId: string }
   ): Promise<ThreadDoc> {
-    const thread = await ctx.runQuery(this.component.threads.getThread, {
-      threadId: args.threadId,
-    });
-    if (!thread) {
-      throw new Error("Thread not found");
-    }
-    return thread;
+    return getThreadMetadata(ctx, this.component, args);
   }
 
   /**
@@ -1765,47 +1633,9 @@ export class Agent<AgentTools extends ToolSet> {
       ...this.options.contextOptions,
       ...opts,
       searchOptions: searchOptions.limit
-        ? (searchOptions as SearchOptions)
+        ? (searchOptions as ContextOptions["searchOptions"])
         : undefined,
     };
-  }
-
-  async _searchOptionsWithEmbeddingAndDefaults(
-    ctx: RunActionCtx,
-    { userId, threadId }: { userId?: string; threadId?: string },
-    contextOptions: ContextOptions,
-    messages: CoreMessage[]
-  ): Promise<SearchOptions> {
-    assert(
-      contextOptions.searchOptions?.textSearch ||
-        contextOptions.searchOptions?.vectorSearch,
-      "searchOptions is required"
-    );
-    assert(messages.length > 0, "Core messages cannot be empty");
-    const text = extractText(messages.at(-1)!);
-    const search: SearchOptions = {
-      limit: contextOptions.searchOptions?.limit ?? 10,
-      messageRange: {
-        ...DEFAULT_MESSAGE_RANGE,
-        ...contextOptions.searchOptions?.messageRange,
-      },
-      text: extractText(messages.at(-1)!),
-    };
-    if (
-      contextOptions.searchOptions?.vectorSearch &&
-      text &&
-      this.options.textEmbedding
-    ) {
-      search.vector = (
-        await this.doEmbed(ctx, {
-          threadId,
-          userId,
-          values: [text],
-        })
-      ).embeddings[0];
-      search.vectorModel = this.options.textEmbedding.modelId;
-    }
-    return search;
   }
 
   async doEmbed(
@@ -1819,7 +1649,10 @@ export class Agent<AgentTools extends ToolSet> {
     }
   ): Promise<{ embeddings: number[][] }> {
     const embedding = this.options.textEmbedding;
-    assert(embedding, "textEmbedding is required");
+    assert(
+      embedding,
+      "a textEmbedding model is required to be set on the Agent that you're doing vector search with"
+    );
     const result = await embedding.doEmbed({
       values: options.values,
       abortSignal: options.abortSignal,
@@ -1857,7 +1690,7 @@ export class Agent<AgentTools extends ToolSet> {
     return Promise.all(
       messages.map(async (message): Promise<CoreMessage> => {
         if (
-          message.role !== "user" ||
+          (message.role !== "user" && message.role !== "assistant") ||
           typeof message.content === "string" ||
           !Array.isArray(message.content)
         ) {
@@ -1867,6 +1700,10 @@ export class Agent<AgentTools extends ToolSet> {
         const processedContent = await Promise.all(
           message.content.map(async (part) => {
             if (part.type === "image" && part.image instanceof URL) {
+              assert(
+                message.role === "user",
+                "Images can only be in user messages"
+              );
               if (this._isLocalhostUrl(part.image)) {
                 const imageData = await this._downloadFile(part.image);
                 return {
@@ -1890,11 +1727,17 @@ export class Agent<AgentTools extends ToolSet> {
             return part;
           })
         );
-
-        return {
-          ...message,
-          content: processedContent,
-        };
+        if (message.role === "user") {
+          return {
+            ...message,
+            content: processedContent as UserContent,
+          };
+        } else {
+          return {
+            ...message,
+            content: processedContent as AssistantContent,
+          };
+        }
       })
     );
   }
@@ -2120,31 +1963,206 @@ export class Agent<AgentTools extends ToolSet> {
   }
 }
 
-export function filterOutOrphanedToolMessages(docs: MessageDoc[]) {
-  const toolCallIds = new Set<string>();
-  const result: MessageDoc[] = [];
-  for (const doc of docs) {
-    if (
-      doc.message?.role === "assistant" &&
-      Array.isArray(doc.message.content)
-    ) {
-      for (const content of doc.message.content) {
-        if (content.type === "tool-call") {
-          toolCallIds.add(content.toolCallId);
-        }
-      }
-      result.push(doc);
-    } else if (doc.message?.role === "tool") {
-      if (doc.message.content.every((c) => toolCallIds.has(c.toolCallId))) {
-        result.push(doc);
-      } else {
-        console.debug("Filtering out orphaned tool message", doc);
-      }
-    } else {
-      result.push(doc);
-    }
+type CoreMessageMaybeWithId = CoreMessage & { id?: string | undefined };
+
+/**
+ * Create a thread to store messages with an Agent.
+ * @param ctx The context from a mutation or action.
+ * @param component The Agent component, usually `components.agent`.
+ * @param args The associated thread metadata.
+ * @returns The id of the created thread.
+ */
+export async function createThread(
+  ctx: RunMutationCtx,
+  component: AgentComponent,
+  args?: {
+    userId?: string;
+    title?: string;
+    summary?: string;
   }
-  return result;
+) {
+  const { _id: threadId } = await ctx.runMutation(
+    component.threads.createThread,
+    { userId: args?.userId, title: args?.title, summary: args?.summary }
+  );
+  return threadId;
 }
 
-type CoreMessageMaybeWithId = CoreMessage & { id?: string | undefined };
+/**
+ * Get the metadata for a thread.
+ * @param ctx A ctx object from a query, mutation, or action.
+ * @param args.threadId The thread to get the metadata for.
+ * @returns The metadata for the thread.
+ */
+export async function getThreadMetadata(
+  ctx: RunQueryCtx,
+  component: AgentComponent,
+  args: { threadId: string }
+): Promise<ThreadDoc> {
+  const thread = await ctx.runQuery(component.threads.getThread, {
+    threadId: args.threadId,
+  });
+  if (!thread) {
+    throw new Error("Thread not found");
+  }
+  return thread;
+}
+
+type SaveMessagesArgs = {
+  threadId: string;
+  userId?: string;
+  /**
+   * The message that these messages are in response to. They will be
+   * the same "order" as this message, at increasing stepOrder(s).
+   */
+  promptMessageId?: string;
+  /**
+   * The messages to save.
+   */
+  messages: CoreMessageMaybeWithId[];
+  /**
+   * Metadata to save with the messages. Each element corresponds to the
+   * message at the same index.
+   */
+  metadata?: Omit<MessageWithMetadata, "message">[];
+  /**
+   * If false, it will "commit" the messages immediately.
+   * If true, it will mark them as pending until the final step has finished.
+   * Defaults to false.
+   */
+  pending?: boolean;
+  /**
+   * If true, it will fail any pending steps.
+   * Defaults to false.
+   */
+  failPendingSteps?: boolean;
+  /**
+   * The embeddings to save with the messages.
+   */
+  embeddings?: Omit<MessageEmbeddings, "dimension">;
+};
+
+/**
+ * Explicitly save messages associated with the thread (& user if provided)
+ */
+export async function saveMessages(
+  ctx: RunMutationCtx,
+  component: AgentComponent,
+  args: SaveMessagesArgs & {
+    /**
+     * The agent name to associate with the messages.
+     */
+    agentName?: string;
+  }
+) {
+  let embeddings: MessageEmbeddings | undefined;
+  if (args.embeddings) {
+    const dimension = args.embeddings.vectors.find((v) => v !== null)?.length;
+    if (dimension) {
+      validateVectorDimension(dimension);
+      embeddings = {
+        model: args.embeddings.model,
+        dimension,
+        vectors: args.embeddings.vectors,
+      };
+    }
+  }
+  const result = await ctx.runMutation(component.messages.addMessages, {
+    threadId: args.threadId,
+    userId: args.userId,
+    agentName: args.agentName,
+    promptMessageId: args.promptMessageId,
+    embeddings,
+    messages: await Promise.all(
+      args.messages.map(async (m, i) => {
+        const { message, fileIds } = await serializeMessage(ctx, component, m);
+        return {
+          ...args.metadata?.[i],
+          message,
+          fileIds,
+        } as MessageWithMetadata;
+      })
+    ),
+    failPendingSteps: args.failPendingSteps ?? false,
+    pending: args.pending ?? false,
+  });
+  return {
+    lastMessageId: result.messages.at(-1)!._id,
+    messages: result.messages,
+  };
+}
+
+type SaveMessageArgs = {
+  threadId: string;
+  userId?: string;
+  /**
+   * Metadata to save with the messages. Each element corresponds to the
+   * message at the same index.
+   */
+  metadata?: Omit<MessageWithMetadata, "message">;
+  /**
+   * The embedding to save with the message.
+   */
+  embedding?: {
+    vector: number[];
+    model: string;
+  };
+} & (
+  | {
+      prompt?: undefined;
+      /**
+       * The message to save.
+       */
+      message: CoreMessage;
+    }
+  | {
+      /*
+       * The prompt to save with the message.
+       */
+      prompt: string;
+      message?: undefined;
+    }
+);
+
+/**
+ * Save a message to the thread.
+ * @param ctx A ctx object from a mutation or action.
+ * @param args The message and what to associate it with (user / thread)
+ * You can pass extra metadata alongside the message, e.g. associated fileIds.
+ * @returns The messageId of the saved message.
+ */
+export async function saveMessage(
+  ctx: RunMutationCtx,
+  component: AgentComponent,
+  args: SaveMessageArgs & {
+    /**
+     * The agent name to associate with the message.
+     */
+    agentName?: string;
+  }
+) {
+  let embeddings:
+    | {
+        vectors: number[][];
+        model: string;
+      }
+    | undefined;
+  if (args.embedding && args.embedding.vector) {
+    embeddings = {
+      model: args.embedding.model,
+      vectors: [args.embedding.vector],
+    };
+  }
+  const { lastMessageId, messages } = await saveMessages(ctx, component, {
+    threadId: args.threadId,
+    userId: args.userId,
+    agentName: args.agentName,
+    messages:
+      args.prompt !== undefined
+        ? [{ role: "user", content: args.prompt }]
+        : [args.message],
+    metadata: args.metadata ? [args.metadata] : undefined,
+    embeddings,
+  });
+  return { messageId: lastMessageId, message: messages.at(-1)! };
+}

@@ -11,7 +11,7 @@ export function optimisticallySendMessage(
 ) => void {
   return (store, args) => {
     const queries = store.getAllQueries(query);
-    let maxOrder = 0;
+    let maxOrder = -1;
     let maxStepOrder = 0;
     for (const q of queries) {
       if (q.args?.threadId !== args.threadId) continue;
@@ -28,7 +28,7 @@ export function optimisticallySendMessage(
       argsToMatch: { threadId: args.threadId, streamArgs: undefined },
       item: {
         _creationTime: Date.now(),
-        _id: crypto.randomUUID(),
+        _id: randomUUID(),
         order,
         stepOrder,
         status: "pending",
@@ -43,4 +43,14 @@ export function optimisticallySendMessage(
       localQueryStore: store,
     });
   };
+}
+
+export function randomUUID() {
+  if (typeof crypto !== "undefined") {
+    return crypto.randomUUID();
+  }
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
 }

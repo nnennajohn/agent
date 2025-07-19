@@ -1,7 +1,23 @@
 # Changelog
 
+## 0.1.15 alpha
+
+- Agents can be dynamically created for the playground
+- You can abort streaming messages
+- You can request that `syncStreams` return aborted streamed messages,
+  if you want to show those in your UI.
+- They will have `msg.streaming === false` if they were aborted.
+- Factored out functions so you don't have to have an agent to call:
+  `saveMessages`, `getThreadMetadata`, `createThread`, `fetchContextMessages`,
+  `listMessages`, `syncStreams`
+- Improved the `ctx` type for the raw request handler and exposed more types
+- Add `agentName` to `UIMessage`
+- Fix: stream deletion is idempotent and cleanup is canceled if it's already deleted.
+
 ## 0.1.14
 
+- Show reasoning before text in UI messages
+- List un-named agents in the playground
 - Expose delete functions for messages & threads on the Agent class
 - Expose updating messages on the Agent class
 - Expose the types for ThreadQuery, StreamArgs, and SyncStreamsReturnValue
@@ -39,7 +55,7 @@
 
 ## 0.1.9
 
-- You can finish a stream asynchronously and have it abort the streaming.
+- You can abort a stream asynchronously and have it stop writing deltas smoothly.
 - The timeout for streaming deltas with no sign of life has been
   increased to 10 minutes.
 - Delete stream deltas automatically 5 min after the stream finishes.

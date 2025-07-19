@@ -277,7 +277,7 @@ export const vMessageEmbeddings = v.object({
   dimension: vVectorDimension,
   vectors: v.array(v.union(v.array(v.number()), v.null())),
 });
-
+export type MessageEmbeddings = Infer<typeof vMessageEmbeddings>;
 
 export const vObjectResult = v.object({
   request: vRequest,
@@ -290,20 +290,12 @@ export const vObjectResult = v.object({
   providerMetadata,
 });
 export type ObjectResult = Infer<typeof vObjectResult>;
-export const vSearchOptions = v.object({
-  vector: v.optional(v.array(v.number())),
-  vectorModel: v.optional(v.string()),
-  text: v.optional(v.string()),
-  limit: v.number(),
-  vectorScoreThreshold: v.optional(v.number()),
-  messageRange: v.optional(v.object({ before: v.number(), after: v.number() })),
-});
-export type SearchOptions = Infer<typeof vSearchOptions>;
 
 export const vContextOptionsSearchOptions = v.object({
   limit: v.number(),
   textSearch: v.optional(v.boolean()),
   vectorSearch: v.optional(v.boolean()),
+  vectorScoreThreshold: v.optional(v.number()),
   messageRange: v.optional(v.object({ before: v.number(), after: v.number() })),
 });
 
@@ -460,6 +452,7 @@ export const vStreamArgs = v.optional(
   v.union(
     v.object({
       kind: v.literal("list"),
+      startOrder: v.optional(v.number()),
     }),
     v.object({
       kind: v.literal("deltas"),
@@ -471,6 +464,11 @@ export type StreamArgs = Infer<typeof vStreamArgs>;
 
 export const vStreamMessage = v.object({
   streamId: v.string(),
+  status: v.union(
+    v.literal("streaming"),
+    v.literal("finished"),
+    v.literal("aborted")
+  ),
   order: v.number(),
   stepOrder: v.number(),
   // metadata

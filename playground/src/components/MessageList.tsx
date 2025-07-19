@@ -24,7 +24,7 @@ const MessageList: React.FC<MessageListProps> = ({
     // TODO: segment the messages by "order" so the message item can show all of
     // the messages that have been grouped together. Right now you can only see
     // the latest message in the group / send messages to it.
-    const uiMessages = toUIMessages([...messages].reverse());
+    const uiMessages = toUIMessages(messages);
     return uiMessages.map((uiMessage) => {
       const message =
         messages.find((message) => message._id === uiMessage.id) ??

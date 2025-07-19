@@ -6,7 +6,7 @@ import {
   vStreamMessage,
 } from "../validators.js";
 import { api, internal } from "./_generated/api.js";
-import type { Id } from "./_generated/dataModel.js";
+import type { Doc, Id } from "./_generated/dataModel.js";
 import {
   internalMutation,
   mutation,
@@ -106,32 +106,119 @@ export const create = mutation({
 export const list = query({
   args: {
     threadId: v.id("threads"),
+    startOrder: v.optional(v.number()),
+    statuses: v.optional(
+      v.array(
+        v.union(
+          v.literal("streaming"),
+          v.literal("finished"),
+          v.literal("aborted")
+        )
+      )
+    ),
   },
   returns: v.array(vStreamMessage),
   handler: async (ctx, args) => {
-    return ctx.db
-      .query("streamingMessages")
-      .withIndex("threadId_state_order_stepOrder", (q) =>
-        q.eq("threadId", args.threadId).eq("state.kind", "streaming")
-      )
-      .order("desc")
-      .take(100)
-      .then((msgs) =>
-        msgs.map((m) => ({
-          streamId: m._id,
-          ...pick(m, [
-            "order",
-            "stepOrder",
-            "userId",
-            "agentName",
-            "model",
-            "provider",
-            "providerOptions",
-          ]),
-        }))
-      );
+    const statuses = args.statuses ?? ["streaming"];
+    const messages = await mergedStream(
+      statuses.map((status) =>
+        stream(ctx.db, schema)
+          .query("streamingMessages")
+          .withIndex("threadId_state_order_stepOrder", (q) =>
+            q
+              .eq("threadId", args.threadId)
+              .eq("state.kind", status)
+              .gte("order", args.startOrder ?? 0)
+          )
+          .order("desc")
+      ),
+      ["order", "stepOrder"]
+    ).take(100);
+
+    return messages.map((m) => ({
+      streamId: m._id,
+      status: m.state.kind,
+      ...pick(m, [
+        "order",
+        "stepOrder",
+        "userId",
+        "agentName",
+        "model",
+        "provider",
+        "providerOptions",
+      ]),
+    }));
   },
 });
+
+export const abortByOrder = mutation({
+  args: {
+    threadId: v.id("threads"),
+    order: v.number(),
+    reason: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamingMessages")
+      .withIndex("threadId_state_order_stepOrder", (q) =>
+        q
+          .eq("threadId", args.threadId)
+          .eq("state.kind", "streaming")
+          .eq("order", args.order)
+      )
+      .take(100);
+    for (const stream of streams) {
+      await abortById(ctx, {
+        streamId: stream._id,
+        reason: args.reason,
+      });
+    }
+    return streams.length > 0;
+  },
+});
+
+export const abort = mutation({
+  args: {
+    streamId: v.id("streamingMessages"),
+    reason: v.string(),
+  },
+  returns: v.boolean(),
+  handler: abortById,
+});
+
+async function abortById(
+  ctx: MutationCtx,
+  args: { streamId: Id<"streamingMessages">; reason: string }
+) {
+  const stream = await ctx.db.get(args.streamId);
+  if (!stream) {
+    throw new Error(`Stream not found: ${args.streamId}`);
+  }
+  if (stream.state.kind !== "streaming") {
+    console.warn(
+      `Stream trying to abort but not currently streaming (${stream.state.kind}): ${args.streamId}`
+    );
+    return false;
+  }
+  await cleanupTimeoutFn(ctx, stream);
+  await ctx.db.patch(args.streamId, {
+    state: { kind: "aborted", reason: args.reason },
+  });
+  return true;
+}
+
+async function cleanupTimeoutFn(
+  ctx: MutationCtx,
+  stream: Doc<"streamingMessages">
+) {
+  if (stream.state.kind === "streaming" && stream.state.timeoutFnId) {
+    const timeoutFn = await ctx.db.system.get(stream.state.timeoutFnId);
+    if (timeoutFn?.state.kind === "pending") {
+      await ctx.scheduler.cancel(stream.state.timeoutFnId);
+    }
+  }
+}
 
 export const finish = mutation({
   args: {
@@ -153,20 +240,15 @@ export const finish = mutation({
       );
       return;
     }
-    if (stream.state.timeoutFnId) {
-      const timeoutFn = await ctx.db.system.get(stream.state.timeoutFnId);
-      if (timeoutFn?.state.kind === "pending") {
-        await ctx.scheduler.cancel(stream.state.timeoutFnId);
-      }
-    }
-    await ctx.db.patch(args.streamId, {
-      state: { kind: "finished", endedAt: Date.now() },
-    });
-    await ctx.scheduler.runAfter(
+    await cleanupTimeoutFn(ctx, stream);
+    const cleanupFnId = await ctx.scheduler.runAfter(
       DELETE_STREAM_DELAY,
       api.streams.deleteStreamAsync,
       { streamId: args.streamId }
     );
+    await ctx.db.patch(args.streamId, {
+      state: { kind: "finished", endedAt: Date.now(), cleanupFnId },
+    });
   },
 });
 
@@ -223,8 +305,8 @@ export const timeoutStream = internalMutation({
     }
     await ctx.db.patch(args.streamId, {
       state: {
-        kind: "finished",
-        endedAt: Date.now(),
+        kind: "aborted",
+        reason: "timeout",
       },
     });
   },
@@ -245,12 +327,9 @@ async function deletePageForStreamId(
   if (deltas.isDone) {
     const stream = await ctx.db.get(args.streamId);
     if (stream) {
-      const state = stream.state;
-      if (state.kind === "streaming" && state.timeoutFnId) {
-        const timeoutFn = await ctx.db.system.get(state.timeoutFnId);
-        if (timeoutFn?.state.kind === "pending") {
-          await ctx.scheduler.cancel(state.timeoutFnId);
-        }
+      await cleanupTimeoutFn(ctx, stream);
+      if (stream.state.kind === "finished" && stream.state.cleanupFnId) {
+        await ctx.scheduler.cancel(stream.state.cleanupFnId);
       }
       await ctx.db.delete(args.streamId);
     }

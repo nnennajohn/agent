@@ -7,7 +7,7 @@
     "email": "support@convex.dev",
     "url": "https://github.com/get-convex/agent/issues"
   },
-  "version": "0.1.14",
+  "version": "0.1.15-alpha.2",
   "license": "Apache-2.0",
   "keywords": [
     "convex",
@@ -18,10 +18,11 @@
   "type": "module",
   "scripts": {
     "example": "cd example && npm run dev",
-    "dev": "run-p 'example' 'build:watch'",
-    "setup": "node setup.cjs && cd example && npx convex dev --once",
+    "dev": "run-p -r 'example' 'build:watch'",
+    "prepare": "npm run build",
+    "setup": "node setup.cjs && cd example && npm run dev:backend -- --once",
     "dashboard": "cd example && npx convex dashboard",
-    "build:watch": "cd src && npx chokidar '../tsconfig*' '**/*.ts' -c 'npm run build' --initial",
+    "build:watch": "npx chokidar 'tsconfig*.json' 'src/**/*.ts' -c 'npm run build' --initial",
     "build": "tsc --project ./tsconfig.build.json && npm run copy:dts && echo '{\\n  \"type\": \"module\"\\n}' > dist/package.json",
     "copy:dts": "rsync -a --include='*/' --include='*.d.ts' --exclude='*' src/ dist/ || cpy 'src/**/*.d.ts' 'dist/' --parents",
     "typecheck": "tsc --noEmit",
@@ -94,6 +95,7 @@
     "prettier": "3.2.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.1",
+    "vite": "^6.3.5",
     "vitest": "^3.1.1",
     "zod": "^3.25.56"
   },

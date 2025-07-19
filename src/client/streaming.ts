@@ -6,11 +6,110 @@ import {
 } from "ai";
 import type {
   ProviderOptions,
+  StreamArgs,
   StreamDelta,
+  StreamMessage,
   TextStreamPart,
 } from "../validators.js";
-import type { AgentComponent, MessageDoc } from "./index.js";
-import type { RunActionCtx } from "./types.js";
+import type { MessageDoc } from "../component/schema.js";
+import type {
+  AgentComponent,
+  RunActionCtx,
+  RunMutationCtx,
+  RunQueryCtx,
+  SyncStreamsReturnValue,
+} from "./types.js";
+import { omit } from "convex-helpers";
+
+/**
+ * A function that handles fetching stream deltas, used with the React hooks
+ * `useThreadMessages` or `useStreamingThreadMessages`.
+ * @param ctx A ctx object from a query, mutation, or action.
+ * @param component The agent component, usually `components.agent`.
+ * @param args.threadId The thread to sync streams for.
+ * @param args.streamArgs The stream arguments with per-stream cursors.
+ * @returns The deltas for each stream from their existing cursor.
+ */
+export async function syncStreams(
+  ctx: RunQueryCtx,
+  component: AgentComponent,
+  args: {
+    threadId: string;
+    streamArgs: StreamArgs | undefined;
+    // By default, only streaming messages are included.
+    includeStatuses?: ("streaming" | "finished" | "aborted")[];
+  }
+): Promise<SyncStreamsReturnValue | undefined> {
+  if (!args.streamArgs) return undefined;
+  if (args.streamArgs.kind === "list") {
+    return {
+      kind: "list",
+      messages: await listStreams(ctx, component, {
+        threadId: args.threadId,
+        startOrder: args.streamArgs.startOrder,
+        includeStatuses: args.includeStatuses,
+      }),
+    };
+  } else {
+    return {
+      kind: "deltas",
+      deltas: await ctx.runQuery(component.streams.listDeltas, {
+        threadId: args.threadId,
+        cursors: args.streamArgs.cursors,
+      }),
+    };
+  }
+}
+
+export async function abortStream(
+  ctx: RunMutationCtx,
+  component: AgentComponent,
+  args: {
+    reason: string;
+  } & ({ streamId: string } | { threadId: string; order: number })
+): Promise<boolean> {
+  if ("streamId" in args) {
+    return await ctx.runMutation(component.streams.abort, {
+      reason: args.reason,
+      streamId: args.streamId,
+    });
+  } else {
+    return await ctx.runMutation(component.streams.abortByOrder, {
+      reason: args.reason,
+      threadId: args.threadId,
+      order: args.order,
+    });
+  }
+}
+
+/**
+ * List the streaming messages for a thread.
+ * @param ctx A ctx object from a query, mutation, or action.
+ * @param component The agent component, usually `components.agent`.
+ * @param args.threadId The thread to list streams for.
+ * @param args.startOrder The order of the messages in the thread to start listing from.
+ * @param args.includeStatuses The statuses to include in the list.
+ * @returns The streams for the thread.
+ */
+export async function listStreams(
+  ctx: RunQueryCtx,
+  component: AgentComponent,
+  {
+    threadId,
+    startOrder,
+    includeStatuses,
+  }: {
+    threadId: string;
+    startOrder?: number;
+    includeStatuses?: ("streaming" | "finished" | "aborted")[];
+  }
+): Promise<StreamMessage[]> {
+  return ctx.runQuery(component.streams.list, {
+    threadId,
+    startOrder,
+    statuses: includeStatuses,
+  });
+}
 
 export type StreamingOptions = {
   /**
@@ -90,13 +189,18 @@ export class DeltaStreamer {
             ...DEFAULT_STREAMING_OPTIONS,
             ...options,
           };
-    this.metadata = metadata;
     this.#nextParts = [];
     this.#nextOrder = metadata.order ?? 0;
     this.#nextStepOrder = (metadata.stepOrder ?? 0) + 1;
     this.abortController = new AbortController();
     if (metadata.abortSignal) {
-      metadata.abortSignal.addEventListener("abort", () => {
+      metadata.abortSignal.addEventListener("abort", async () => {
+        if (this.streamId) {
+          await this.ctx.runMutation(this.component.streams.abort, {
+            streamId: this.streamId,
+            reason: "abortSignal",
+          });
+        }
         this.abortController.abort();
       });
     }
@@ -109,7 +213,7 @@ export class DeltaStreamer {
       this.streamId = await this.ctx.runMutation(
         this.component.streams.create,
         {
-          ...this.metadata,
+          ...omit(this.metadata, ["abortSignal"]),
           order: this.#nextOrder,
           stepOrder: this.#nextStepOrder,
         }

@@ -3,10 +3,12 @@ import LeftPanel from "@/components/LeftPanel";
 import MiddlePanel from "@/components/MiddlePanel";
 import RightPanel from "@/components/RightPanel";
 import { useToast } from "@/components/ui/use-toast";
-import { usePaginatedQuery, useQuery, useAction } from "convex/react";
-import type { PlaygroundAPI } from "../definePlaygroundAPI";
+import { useQuery, useAction } from "convex/react";
+import { usePaginatedQuery } from "convex-helpers/react";
+import type { PlaygroundAPI } from "../definePlaygroundAPI.js";
 import { ContextMessage, Thread, Agent } from "@/types";
 import { ContextOptions, StorageOptions } from "@convex-dev/agent";
+import { useThreadMessages } from "@convex-dev/agent/react";
 import {
   DEFAULT_CONTEXT_OPTIONS,
   DEFAULT_STORAGE_OPTIONS,
@@ -17,7 +19,7 @@ interface PlayProps {
   api: PlaygroundAPI;
 }
 
-const Play = ({ apiKey, api }: PlayProps) => {
+function Play({ apiKey, api }: PlayProps) {
   const { toast } = useToast();
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const [selectedThreadId, setSelectedThreadId] = useState<
@@ -55,7 +57,7 @@ const Play = ({ apiKey, api }: PlayProps) => {
     }
   }, [threads.results, selectedThreadId]);
 
-  const messages = usePaginatedQuery(
+  const messages = useThreadMessages(
     api.listMessages,
     selectedThreadId ? { apiKey, threadId: selectedThreadId } : "skip",
     { initialNumItems: 20 }
@@ -66,7 +68,11 @@ const Play = ({ apiKey, api }: PlayProps) => {
     }
   }, [messages.results, selectedMessageId]);
 
-  const agents = useQuery(api.listAgents, { apiKey });
+  const agents = useQuery(api.listAgents, {
+    apiKey,
+    threadId: selectedThreadId,
+    userId: selectedUserId,
+  });
   useEffect(() => {
     if (agents && agents.length > 0 && !selectedAgent) {
       setSelectedAgent(agents[0]);
@@ -75,6 +81,18 @@ const Play = ({ apiKey, api }: PlayProps) => {
       }
       if (agents[0].storageOptions) {
         setStorageOptions(agents[0].storageOptions);
+      }
+    } else if (agents && selectedAgent) {
+      const newAgent = agents.find(
+        (agent) => agent.name === selectedAgent.name
+      );
+      if (newAgent) {
+        if (JSON.stringify(selectedAgent) !== JSON.stringify(newAgent)) {
+          setSelectedAgent(newAgent);
+        }
+      } else {
+        // The selected agent is no longer in the list of agents, so clear it
+        setSelectedAgent(undefined);
       }
     }
   }, [agents, selectedAgent]);
@@ -106,7 +124,11 @@ const Play = ({ apiKey, api }: PlayProps) => {
   const handleSelectMessage = (messageId: string) => {
     setSelectedMessageId(messageId);
     const message = messages.results.find((m) => m._id === messageId);
-    if (message && message.agentName && selectedAgent !== message.agentName) {
+    if (
+      message &&
+      message.agentName &&
+      selectedAgent?.name !== message.agentName
+    ) {
       const agent = agents?.find((a) => a.name === message.agentName);
       if (agent) {
         setSelectedAgent(agent);
@@ -127,7 +149,7 @@ const Play = ({ apiKey, api }: PlayProps) => {
           agentName: selectedAgent.name,
           threadId: selectedThreadId,
           userId: selectedUserId,
-          messages: [selectedMessage.message],
+          messages: selectedMessage.message ? [selectedMessage.message] : [],
           contextOptions,
           beforeMessageId: selectedMessage._id,
         });
@@ -214,7 +236,7 @@ const Play = ({ apiKey, api }: PlayProps) => {
         </div>
         <div className="w-2/5 h-full">
           <RightPanel
-            selectedMessage={selectedMessage}
+            selectedMessage={selectedMessage ?? null}
             contextMessages={contextMessages}
             contextOptions={contextOptions}
             setContextOptions={setContextOptions}

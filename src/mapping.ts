@@ -125,7 +125,6 @@ export async function serializeObjectResult(
   const { message, fileIds } = await serializeMessage(ctx, component, {
     role: "assistant" as const,
     content: text,
-    id: result.response.id,
   });
   return {
     messages: [
@@ -186,6 +185,9 @@ export async function serializeContent(
             fileIds.push(file.fileId);
           }
           return { ...part, data };
+        }
+        case "tool-result": {
+          return { ...part, result: part.result ?? null };
         }
         default:
           return part;
@@ -281,6 +283,11 @@ export function guessMimeType(buf: ArrayBuffer | string): string {
   return "application/octet-stream";
 }
 
+/**
+ * Serialize an AI SDK `DataContent` or `URL` to a Convex-serializable format.
+ * @param dataOrUrl - The data or URL to serialize.
+ * @returns The serialized data as an ArrayBuffer or the URL as a string.
+ */
 export function serializeDataOrUrl(
   dataOrUrl: DataContent | URL
 ): ArrayBuffer | string {
