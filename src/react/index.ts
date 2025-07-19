@@ -114,7 +114,7 @@ export function useThreadMessages<
     const streamListMessages =
       streamMessages?.map((m) => ({
         ...m,
-        streaming: !m.status || m.status === "streaming",
+        streaming: !m.status || m.status === "pending",
       })) ?? [];
     return {
       ...paginated,
