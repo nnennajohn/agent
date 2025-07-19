@@ -125,7 +125,6 @@ export async function serializeObjectResult(
   const { message, fileIds } = await serializeMessage(ctx, component, {
     role: "assistant" as const,
     content: text,
-    id: result.response.id,
   });
   return {
     messages: [
