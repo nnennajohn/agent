@@ -64,7 +64,7 @@ export const streamThenAbortAsync = action({
         }
       }
     } catch (error) {
-      console.error("Catching what should be an AbortError", error);
+      console.warn("Catching what should be an AbortError", error);
     }
   },
 });
@@ -124,7 +124,7 @@ export const streamThenUseAbortSignal = action({
         console.log(chunk);
       }
     } catch (error) {
-      console.error("Catching what should be an AbortError", error);
+      console.warn("Catching what should be an AbortError", error);
     }
     await result.consumeStream();
   },
