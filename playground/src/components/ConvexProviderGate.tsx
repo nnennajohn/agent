@@ -43,10 +43,8 @@ function ConvexProviderGate({ children }: { children: ReactNode }) {
   const [instanceName, setInstanceName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // Optimistically pass through the original deploymentUrl if set.
-  const [isValid, setIsValid] = useState(
-    !!deploymentUrl && isValidHttpUrl(deploymentUrl)
-  );
+  // Don't optimistically set isValid to true - wait for async validation
+  const [isValid, setIsValid] = useState(false);
 
   // Extracted validation logic for reuse
   const validateDeploymentUrl = async (url: string) => {
@@ -86,13 +84,13 @@ function ConvexProviderGate({ children }: { children: ReactNode }) {
     }
   };
 
-  // 2. Debounced async validation of deploymentUrl
+  // 2. Validate deployment URL when it changes
   useEffect(() => {
-    if (!deploymentUrl) return;
-    const handler = setTimeout(() => {
-      validateDeploymentUrl(deploymentUrl);
-    }, 400);
-    return () => clearTimeout(handler);
+    if (!deploymentUrl) {
+      setIsValid(false);
+      return;
+    }
+    validateDeploymentUrl(deploymentUrl);
   }, [deploymentUrl]);
 
   // Polling effect: If deploymentUrl is set but not valid, poll every 3 seconds
@@ -120,7 +118,7 @@ function ConvexProviderGate({ children }: { children: ReactNode }) {
     }
   };
 
-  // 3. Only show children if isValid is true
+  // 3. Only create convex client when both deploymentUrl and isValid are true
   const convex = useMemo(
     () =>
       isValid && deploymentUrl ? new ConvexReactClient(deploymentUrl) : null,
