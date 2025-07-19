@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/tools
 import { components } from "../_generated/api";
 import { Agent, createTool } from "@convex-dev/agent";
 import { openai } from "@ai-sdk/openai";

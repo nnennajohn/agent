@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/rate-limiting
 import { Agent, saveMessage, UsageHandler } from "@convex-dev/agent";
 import { components, internal } from "../_generated/api";
 import { chat, textEmbedding } from "../modelsForDemo";

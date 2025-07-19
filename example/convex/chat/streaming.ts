@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/messages
 import { paginationOptsValidator } from "convex/server";
 import { vStreamArgs } from "@convex-dev/agent";
 import { internal } from "../_generated/api";

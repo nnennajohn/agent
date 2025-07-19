@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/messages
 import { components, internal } from "../_generated/api";
 import { action, internalAction, mutation, query } from "../_generated/server";
 import { saveMessage } from "@convex-dev/agent";

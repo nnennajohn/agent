@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/usage-tracking
 import { internalMutation, MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";

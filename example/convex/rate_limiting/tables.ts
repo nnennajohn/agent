@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/rate-limiting
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 

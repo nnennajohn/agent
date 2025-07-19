@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/agent-setup
 import { Agent } from "@convex-dev/agent";
 import { components } from "../_generated/api";
 import { getGeocoding, getWeather } from "../tools/weather";

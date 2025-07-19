@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/files
 import { v } from "convex/values";
 import { action } from "../_generated/server";
 import { agent } from "../agents/simple";

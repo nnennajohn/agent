@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/files
 import { Agent, createThread, saveMessage, storeFile } from "@convex-dev/agent";
 import { components, internal } from "../_generated/api";
 import { chat, textEmbedding } from "../modelsForDemo";

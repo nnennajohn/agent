@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/rag
 import { RAG } from "@convex-dev/rag";
 import { v } from "convex/values";
 import { components, internal } from "../_generated/api";

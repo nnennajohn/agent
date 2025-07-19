@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/threads
 import { components } from "./_generated/api";
 
 import { v } from "convex/values";

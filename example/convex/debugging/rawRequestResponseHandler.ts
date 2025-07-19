@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/debugging
 import { RawRequestResponseHandler } from "@convex-dev/agent";
 
 export const rawRequestResponseHandler: RawRequestResponseHandler = async (

@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/workflows
 import { WorkflowId, WorkflowManager } from "@convex-dev/workflow";
 import { createThread } from "@convex-dev/agent";
 import { components, internal } from "../_generated/api";

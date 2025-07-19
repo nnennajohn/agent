@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/human-agents
 import {
   saveMessage,
   listMessages,

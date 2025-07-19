@@ -1,3 +1,4 @@
+// See the docs at https://docs.convex.dev/agents/rag
 import { openai } from "@ai-sdk/openai";
 import { createTool } from "@convex-dev/agent";
 import { RAG } from "@convex-dev/rag";
