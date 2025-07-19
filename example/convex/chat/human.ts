@@ -140,9 +140,11 @@ export const humanResponseAsToolCall = internalAction({
       },
     });
     // Continue generating a response from the LLM
-    await agent.generateText(ctx, { threadId: args.threadId }, {
-      promptMessageId: args.messageId,
-    });
+    await agent.generateText(
+      ctx,
+      { threadId: args.threadId },
+      { promptMessageId: args.messageId },
+    );
   },
 });
 

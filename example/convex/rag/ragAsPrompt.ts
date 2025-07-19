@@ -2,7 +2,7 @@
 import { RAG } from "@convex-dev/rag";
 import { v } from "convex/values";
 import { components, internal } from "../_generated/api";
-import { action, internalAction } from "../_generated/server";
+import { action, internalAction, mutation } from "../_generated/server";
 import { textEmbedding } from "../modelsForDemo";
 import { agent } from "../agents/simple";
 import { authorizeThreadAccess } from "../threads";
@@ -16,9 +16,10 @@ export const rag = new RAG(components.rag, {
  * Add context to the RAG index.
  * This is used to search for context when the user asks a question.
  */
-export const addContext = internalAction({
+export const addContext = action({
   args: { title: v.string(), text: v.string() },
   handler: async (ctx, args) => {
+    // TODO: Add authorization
     await rag.add(ctx, {
       namespace: "global", // Could set a per-user namespace here
       title: args.title,
@@ -31,23 +32,17 @@ export const addContext = internalAction({
 /**
  * Answer a user question via RAG.
  * It looks up chunks of context in the RAG index and uses them in the prompt.
+ * This is started asynchronously after saving the prompt message to the thread
+ * (see askQuestion below).
  */
-export const answerQuestionViaRAG = action({
+export const answerQuestionViaRAG = internalAction({
   args: {
     threadId: v.string(),
     prompt: v.string(),
+    promptMessageId: v.string(),
   },
-  handler: async (ctx, { threadId, prompt: rawPrompt }) => {
-    await authorizeThreadAccess(ctx, threadId);
-
+  handler: async (ctx, { threadId, prompt: rawPrompt, promptMessageId }) => {
     const { thread } = await agent.continueThread(ctx, { threadId });
-
-    // Save the raw prompt message to the thread. We'll associate the response
-    // with this message below.
-    const { messageId: promptMessageId } = await agent.saveMessage(ctx, {
-      threadId,
-      prompt: rawPrompt,
-    });
 
     // Search the RAG index for context.
     const context = await rag.search(ctx, {
@@ -80,5 +75,26 @@ export const answerQuestionViaRAG = action({
     });
     // This is necessary to ensure the stream is finished before returning.
     await result.consumeStream();
+  },
+});
+
+export const askQuestion = mutation({
+  args: {
+    threadId: v.string(),
+    prompt: v.string(),
+  },
+  handler: async (ctx, { threadId, prompt }) => {
+    await authorizeThreadAccess(ctx, threadId);
+    // Save the raw prompt message to the thread. We'll associate the response
+    // with this message below.
+    const { messageId } = await agent.saveMessage(ctx, {
+      threadId,
+      prompt,
+    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.rag.ragAsPrompt.answerQuestionViaRAG,
+      { threadId, prompt, promptMessageId: messageId },
+    );
   },
 });

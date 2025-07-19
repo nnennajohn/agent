@@ -8,6 +8,7 @@ import type {
   ProviderOptions,
   StreamArgs,
   StreamDelta,
+  StreamMessage,
   TextStreamPart,
 } from "../validators.js";
 import type { MessageDoc } from "../component/schema.js";
@@ -43,10 +44,10 @@ export async function syncStreams(
   if (args.streamArgs.kind === "list") {
     return {
       kind: "list",
-      messages: await ctx.runQuery(component.streams.list, {
+      messages: await listStreams(ctx, component, {
         threadId: args.threadId,
         startOrder: args.streamArgs.startOrder,
-        statuses: args.includeStatuses,
+        includeStatuses: args.includeStatuses,
       }),
     };
   } else {
@@ -79,6 +80,35 @@ export async function abortStream(
       order: args.order,
     });
   }
+}
+
+/**
+ * List the streaming messages for a thread.
+ * @param ctx A ctx object from a query, mutation, or action.
+ * @param component The agent component, usually `components.agent`.
+ * @param args.threadId The thread to list streams for.
+ * @param args.startOrder The order of the messages in the thread to start listing from.
+ * @param args.includeStatuses The statuses to include in the list.
+ * @returns The streams for the thread.
+ */
+export async function listStreams(
+  ctx: RunQueryCtx,
+  component: AgentComponent,
+  {
+    threadId,
+    startOrder,
+    includeStatuses,
+  }: {
+    threadId: string;
+    startOrder?: number;
+    includeStatuses?: ("streaming" | "finished" | "aborted")[];
+  }
+): Promise<StreamMessage[]> {
+  return ctx.runQuery(component.streams.list, {
+    threadId,
+    startOrder,
+    statuses: includeStatuses,
+  });
 }
 
 export type StreamingOptions = {

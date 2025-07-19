@@ -24,6 +24,7 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import type { MessageDoc, ThreadDoc } from "../component/schema.js";
+import type { threadFieldsSupportingPatch } from "../component/threads.js";
 import {
   validateVectorDimension,
   type VectorDimension,
@@ -38,23 +39,27 @@ import {
 } from "../mapping.js";
 import { extractText, isTool } from "../shared.js";
 import {
-  type MessageWithMetadata,
+  type MessageEmbeddings,
   type MessageStatus,
+  type MessageWithMetadata,
   type ProviderMetadata,
   type StreamArgs,
   type Usage,
   vMessageWithMetadata,
   vSafeObjectArgs,
   vTextArgs,
-  type MessageEmbeddings,
 } from "../validators.js";
 import { createTool, wrapTools } from "./createTool.js";
+import { listMessages } from "./listMessages.js";
+import { fetchContextMessages } from "./search.js";
 import {
   DeltaStreamer,
   mergeTransforms,
   type StreamingOptions,
+  syncStreams,
 } from "./streaming.js";
 import type {
+  ActionCtx,
   AgentComponent,
   ContextOptions,
   GenerationOutputMetadata,
@@ -65,7 +70,6 @@ import type {
   RunActionCtx,
   RunMutationCtx,
   RunQueryCtx,
-  ActionCtx,
   StorageOptions,
   StreamingTextArgs,
   SyncStreamsReturnValue,
@@ -73,14 +77,9 @@ import type {
   Thread,
   UsageHandler,
 } from "./types.js";
-import type { threadFieldsSupportingPatch } from "../component/threads.js";
-import { listMessages } from "./listMessages.js";
-import { syncStreams } from "./streaming.js";
-import { fetchContextMessages } from "./search.js";
 
-export { storeFile, getFile } from "./files.js";
-export { serializeDataOrUrl } from "../mapping.js";
 export { vMessageDoc, vThreadDoc } from "../component/schema.js";
+export { serializeDataOrUrl } from "../mapping.js";
 export {
   vAssistantMessage,
   vContextOptions,
@@ -95,7 +94,9 @@ export {
   vUserMessage,
 } from "../validators.js";
 export type { ToolCtx } from "./createTool.js";
+export { getFile, storeFile } from "./files.js";
 export { filterOutOrphanedToolMessages } from "./search.js";
+export { abortStream, listStreams } from "./streaming.js";
 export {
   createTool,
   extractText,

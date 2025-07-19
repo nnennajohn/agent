@@ -67,7 +67,7 @@ export const streamAsync = internalAction({
     const result = await thread.streamText(
       { promptMessageId },
       // more custom delta options (`true` uses defaults)
-      { saveStreamDeltas: { chunking: "line", throttleMs: 1000 } },
+      { saveStreamDeltas: { chunking: "word", throttleMs: 100 } },
     );
     // We need to make sure the stream finishes - by awaiting each chunk
     // or using this call to consume it all.
@@ -89,7 +89,11 @@ export const listMessages = query({
   handler: async (ctx, args) => {
     const { threadId, paginationOpts, streamArgs } = args;
     await authorizeThreadAccess(ctx, threadId);
-    const streams = await storyAgent.syncStreams(ctx, { threadId, streamArgs });
+    const streams = await storyAgent.syncStreams(ctx, {
+      threadId,
+      streamArgs,
+      includeStatuses: ["aborted", "streaming"],
+    });
     // Here you could filter out / modify the stream of deltas / filter out
     // deltas.
 
@@ -97,6 +101,7 @@ export const listMessages = query({
       threadId,
       paginationOpts,
     });
+
     // Here you could filter out metadata that you don't want from any optional
     // fields on the messages.
     // You can also join data onto the messages. They need only extend the

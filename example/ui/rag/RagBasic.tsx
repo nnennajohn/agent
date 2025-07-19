@@ -12,10 +12,12 @@ import { toast } from "@/hooks/use-toast";
 function RagBasicUI() {
   const [selectedEntry, setSelectedEntry] = useState<EntryId | null>(null);
   const [threadId, setThreadId] = useState<string | undefined>(undefined);
-  const createThread = useMutation(api.rag.utils.createThread);
+  const createThread = useMutation(api.threads.createNewThread);
   useEffect(() => {
     if (threadId) return;
-    void createThread().then((threadId) => {
+    void createThread({
+      title: "RAG Thread",
+    }).then((threadId) => {
       setThreadId(threadId);
     });
   }, [createThread, threadId]);
@@ -37,12 +39,14 @@ function RagBasicUI() {
   );
 
   // Actions and queries
-  const addContext = useAction(api.rag.ragBasic.addContext);
+  const addContext = useAction(api.rag.ragAsPrompt.addContext);
   const sendMessage = useMutation(
-    api.rag.ragBasic.sendMessage,
-  ).withOptimisticUpdate(optimisticallySendMessage(api.rag.utils.listMessages));
+    api.rag.ragAsPrompt.askQuestion,
+  ).withOptimisticUpdate(
+    optimisticallySendMessage(api.rag.utils.listMessagesWithContext),
+  );
   const listMessages = useThreadMessages(
-    api.rag.utils.listMessages,
+    api.rag.utils.listMessagesWithContext,
     threadId ? { threadId } : "skip",
     { initialNumItems: 10, stream: true },
   );
