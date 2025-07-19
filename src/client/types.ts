@@ -131,7 +131,7 @@ export type StorageOptions = {
   saveOutputMessages?: boolean;
 };
 
-export type GenerationOutputMetadata = { messageId?: string };
+export type GenerationOutputMetadata = { messageId?: string; order?: number };
 
 export type UsageHandler = (
   ctx: RunActionCtx,
@@ -333,9 +333,7 @@ export type OurStreamObjectArgs<T> = StreamObjectArgs<T> &
     "onError" | "onFinish" | "abortSignal"
   >;
 
-type ThreadOutputMetadata = GenerationOutputMetadata & {
-  messageId: string;
-};
+type ThreadOutputMetadata = Required<GenerationOutputMetadata>;
 
 /**
  * The interface for a thread returned from {@link createThread} or {@link continueThread}.

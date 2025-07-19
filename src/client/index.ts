@@ -423,7 +423,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const toolCtx = { ...ctx, userId, threadId, messageId, agent: this };
     const tools = wrapTools(
       toolCtx,
@@ -478,6 +478,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
       > &
         GenerationOutputMetadata;
       result.messageId = messageId;
+      result.order = order;
       return result;
     } catch (error) {
       if (threadId && messageId) {
@@ -644,6 +645,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
     > &
       GenerationOutputMetadata;
     result.messageId = messageId;
+    result.order = order;
     return result;
   }
 
@@ -676,7 +678,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const trackUsage = usageHandler ?? this.options.usageHandler;
     const saveOutputMessages = this._shouldSaveOutputMessages(
       options?.storageOptions
@@ -698,6 +700,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
         });
       }
       result.messageId = messageId;
+      result.order = order;
       if (this.options.rawRequestResponseHandler) {
         await this.options.rawRequestResponseHandler(ctx, {
           userId,
@@ -762,7 +765,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
       threadId,
       ...options,
     });
-    const { args: aiArgs, messageId, userId } = context;
+    const { args: aiArgs, messageId, order, userId } = context;
     const trackUsage = usageHandler ?? this.options.usageHandler;
     const saveOutputMessages = this._shouldSaveOutputMessages(
       options?.storageOptions
@@ -823,6 +826,7 @@ export class Agent<AgentTools extends ToolSet = ToolSet> {
     }) as StreamObjectResult<DeepPartial<T>, T, never> &
       GenerationOutputMetadata;
     stream.messageId = messageId;
+    stream.order = order;
     return stream;
   }
 
