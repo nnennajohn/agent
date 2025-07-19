@@ -14,6 +14,7 @@ import type { MessageDoc } from "../component/schema.js";
 import type {
   AgentComponent,
   RunActionCtx,
+  RunMutationCtx,
   RunQueryCtx,
   SyncStreamsReturnValue,
 } from "./types.js";
@@ -59,6 +60,26 @@ export async function syncStreams(
   }
 }
 
+export async function abortStream(
+  ctx: RunMutationCtx,
+  component: AgentComponent,
+  args: {
+    reason: string;
+  } & ({ streamId: string } | { threadId: string; order: number })
+): Promise<boolean> {
+  if ("streamId" in args) {
+    return await ctx.runMutation(component.streams.abort, {
+      reason: args.reason,
+      streamId: args.streamId,
+    });
+  } else {
+    return await ctx.runMutation(component.streams.abortByOrder, {
+      reason: args.reason,
+      threadId: args.threadId,
+      order: args.order,
+    });
+  }
+}
 
 export type StreamingOptions = {
   /**

@@ -151,29 +151,62 @@ export const list = query({
   },
 });
 
+export const abortByOrder = mutation({
+  args: {
+    threadId: v.id("threads"),
+    order: v.number(),
+    reason: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const streams = await ctx.db
+      .query("streamingMessages")
+      .withIndex("threadId_state_order_stepOrder", (q) =>
+        q
+          .eq("threadId", args.threadId)
+          .eq("state.kind", "streaming")
+          .eq("order", args.order)
+      )
+      .take(100);
+    for (const stream of streams) {
+      await abortById(ctx, {
+        streamId: stream._id,
+        reason: args.reason,
+      });
+    }
+    return streams.length > 0;
+  },
+});
+
 export const abort = mutation({
   args: {
     streamId: v.id("streamingMessages"),
     reason: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const stream = await ctx.db.get(args.streamId);
-    if (!stream) {
-      throw new Error(`Stream not found: ${args.streamId}`);
-    }
-    if (stream.state.kind !== "streaming") {
-      console.warn(
-        `Stream trying to abort but not currently streaming (${stream.state.kind}): ${args.streamId}`
-      );
-      return;
-    }
-    await cleanupTimeoutFn(ctx, stream);
-    await ctx.db.patch(args.streamId, {
-      state: { kind: "aborted", reason: args.reason },
-    });
-  },
+  returns: v.boolean(),
+  handler: abortById,
 });
+
+async function abortById(
+  ctx: MutationCtx,
+  args: { streamId: Id<"streamingMessages">; reason: string }
+) {
+  const stream = await ctx.db.get(args.streamId);
+  if (!stream) {
+    throw new Error(`Stream not found: ${args.streamId}`);
+  }
+  if (stream.state.kind !== "streaming") {
+    console.warn(
+      `Stream trying to abort but not currently streaming (${stream.state.kind}): ${args.streamId}`
+    );
+    return false;
+  }
+  await cleanupTimeoutFn(ctx, stream);
+  await ctx.db.patch(args.streamId, {
+    state: { kind: "aborted", reason: args.reason },
+  });
+  return true;
+}
 
 async function cleanupTimeoutFn(
   ctx: MutationCtx,

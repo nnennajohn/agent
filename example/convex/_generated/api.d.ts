@@ -1655,7 +1655,13 @@ export declare const components: {
         "mutation",
         "internal",
         { reason: string; streamId: string },
-        null
+        boolean
+      >;
+      abortByOrder: FunctionReference<
+        "mutation",
+        "internal",
+        { order: number; reason: string; threadId: string },
+        boolean
       >;
       addDelta: FunctionReference<
         "mutation",

@@ -1437,7 +1437,13 @@ export type Mounts = {
       "mutation",
       "public",
       { reason: string; streamId: string },
-      null
+      boolean
+    >;
+    abortByOrder: FunctionReference<
+      "mutation",
+      "public",
+      { order: number; reason: string; threadId: string },
+      boolean
     >;
     addDelta: FunctionReference<
       "mutation",
